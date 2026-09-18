@@ -22,7 +22,6 @@ Update installed skills later with `npx skills@latest update`.
 | Skill | Purpose |
 | --- | --- |
 | `decompose-ticket` | Split a ticket too big for one implementation pass into a walking skeleton, per-seam subtasks with frozen contracts, and an integration task. |
-| `hello-world` | Throwaway check that installation works end to end. |
 
 ## Layout
 
@@ -34,7 +33,7 @@ Required frontmatter:
 
 ```yaml
 ---
-name: hello-world
+name: decompose-ticket
 description: One line shown when an agent picks the skill.
 ---
 ```
