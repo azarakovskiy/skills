@@ -21,7 +21,7 @@ Update installed skills later with `npx skills@latest update`.
 
 | Skill | Purpose |
 | --- | --- |
-| `decompose-ticket` | Split a ticket too big for one implementation pass into a walking skeleton, per-seam subtasks with frozen contracts, and an integration task. |
+| `decompose-ticket` | Split a ticket too big for one implementation pass into a walking skeleton, one subtask per seam or entry point with frozen contracts, and an integration task. |
 
 ## Layout
 
