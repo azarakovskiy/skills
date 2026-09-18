@@ -1,12 +1,12 @@
 ---
 name: decompose-ticket
-description: Split a ticket too big for one implementation pass into a walking skeleton, one subtask per seam or entry point, and an integration task — a Subtasks section an orchestrator dispatches in dependency order. Tickets that fit pass through untouched.
+description: Split a ticket too big for one implementation pass into a walking skeleton, one subtask per seam or entry point, and an integration task — the ticket marked orchestrated, subtasks in dependency order. Tickets that fit pass through untouched.
 disable-model-invocation: true
 ---
 
 # Decompose Ticket
 
-Input: one ticket that states its outcome. Output: either "implement as-is", or the same ticket extended with a `## Subtasks` section: a walking skeleton, one subtask per seam or entry point, an integration task, and the dispatch rules an orchestrator runs them by. The ticket is the plan — subtasks live in it, not in new tickets.
+Input: one ticket that states its outcome. Output: either "implement as-is", or the same ticket, marked orchestrated in its own head and extended with a `## Subtasks` section: a walking skeleton, one subtask per seam or entry point, an integration task. The ticket is the plan — subtasks live in it, not in new tickets.
 
 ## Process
 
@@ -22,7 +22,7 @@ Attribute every **entry point** — a thing a verifier runs: a command, a flag, 
 
 ### 2. Pass through or split
 
-**Pass through** when the ticket has one seam and one entry point — one check proves the ticket done: implement it as one unit, with no Subtasks section.
+**Pass through** when the ticket has one seam and one entry point — one check proves the ticket done: implement it as one unit, with no marker and no Subtasks section.
 
 **Split** when any of these holds:
 
@@ -70,25 +70,26 @@ A subtask that still fails step 2 decomposes further in place: re-enter at step 
 
 ## Writing the Subtasks section
 
-Append to the ticket, below its own text, numbering subtasks in dependency order — the skeleton first, integration last. Keep the field names verbatim; an orchestrator reads them.
+Append to the ticket, below its own text, numbering subtasks in dependency order — the skeleton first, integration last. Keep the field names verbatim, and every path relative to whatever checkout the ticket is read from: the executor's machine is not yours.
 
 <subtasks-section-template>
 
 ## Subtasks
 
-**Split because:** <the trigger that fired — more than one seam, more than one entry point, or thrashing>.
-**Workspace:** before the first dispatch, create a worktree on branch `feature/<slug>` — the feature workspace. Every subtask lands there: a subtask running beside another gets a worktree of its own, branched off the feature branch tip, merged back on landing.
-**Dispatch:** one subagent per frontier subtask, implemented with the implement skill; a subtask lands only with its check green, before its dependents dispatch.
-**Pass to the subagent:** these rules, its spec below, the workspace path and branch, the claims of the lanes it runs beside on any shared file, pointers to what already landed that its spec consumes (paths, entry points, signatures — pointers, not diffs), and the end-to-end check. Waves, merges, and gates stay with the orchestrator.
-**Report up:** status, files landed, the check's command and its output — diffs stay in the worktree. A subtask that cannot satisfy its contract, or that merges outside its declared regions, stops and reports instead of amending it.
+**Split because:** <the trigger that fired — more than one seam, more than one entry point, or thrashing>; <the count that proves it — N entry points across M seams>, one implementation pass each.
+**Waves:** <the frontier per wave, from the `Blocked by` edges — W1 01; W2 02, 03; …>.
 
 ### 01 — <title>
 
-**Owns:** the files it may edit, and the regions inside any file it shares — one seam, or one entry point inside it; nothing else.
+**Owns:** the files it may edit, workspace-relative, and the regions inside any file it shares — one seam, or one entry point inside it; nothing else.
 **Contract:** the frozen contract of its entry point, from the skeleton's spec.
 **Verification:** the check that proves it — its own check plus the skeleton's end-to-end check; the integration spec names the ticket's acceptance criteria.
 **Blocked by:** the skeleton, or a subtask whose contract it consumes.
 
 </subtasks-section-template>
 
-That section is the orchestrator's whole state: the plan it dispatches from, one bounded report per lane, and each check's output. Code-level review already runs inside every lane, and the acceptance walk belongs to the integration subtask.
+Mark the ticket's own head too, beside its status and blockers, so a reader knows before opening the section:
+
+**Orchestrated:** <N> subtasks in <N> waves — not one implementation pass.
+
+Code-level review already runs inside every lane; the acceptance walk belongs to the integration subtask.
