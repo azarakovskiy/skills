@@ -5,6 +5,8 @@ disable-model-invocation: true
 dependencies:
   - name: grilling
     repo: mattpocock/skills
+  - name: writing-for-agents
+    repo: mattpocock/skills
 ---
 
 The text after this invocation is a task. Turn it into the minimum task brief an agent can execute without consequential guesses. A clear, low-risk request should pass quickly.
@@ -72,4 +74,4 @@ Stay when this session holds context the executor needs and its instructions mat
 ## 6. Deliver
 
 - **Execute here:** carry out the confirmed brief.
-- **Produce a prompt:** read `write.md` and write it from the brief.
+- **Produce a prompt:** call the skill tool for `writing-for-agents` and follow that skill. When the skill tool cannot find `writing-for-agents`, give the user the install instruction in [dependencies.md](dependencies.md) and read [writing_for_agents_fallback.md](writing_for_agents_fallback.md). Then read [write.md](write.md) and write the prompt from the brief.

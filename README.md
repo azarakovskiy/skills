@@ -25,6 +25,8 @@ Update installed skills later with `npx skills@latest update`.
 | `prompt-me` | Turn a rough request into a shared, execution-ready task — explore missing context, resolve consequential decisions, check that the work fits one smart zone, confirm the brief, then execute it or write a reusable prompt. [[has-dependencies]](#dependencies) |
 | `zoom-out` | Explain a complex or abstract subject through its purpose, boundaries, components, and a concrete example — epitome, why it matters, what the explanation includes, a map of the parts, then one component shown in an example and placed back on the map. |
 
+`prompt-me` requires `writing-for-agents` from `mattpocock/skills`: `npx skills@latest add mattpocock/skills --skill grilling --skill writing-for-agents`
+
 ## Dependencies
 
 | Skill | Dependencies |
