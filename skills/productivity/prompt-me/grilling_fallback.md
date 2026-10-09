@@ -6,4 +6,4 @@ Ask the frontier questions you can ask now. A question that depends on another q
 
 Recommended: <answer>
 
-Wait for the user's answers, then return to the meta-prompt skill.
+Wait for the user's answers, then return to the prompt-me skill.

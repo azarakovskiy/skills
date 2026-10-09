@@ -1,5 +1,5 @@
 ---
-name: meta-prompt
+name: prompt-me
 description: Turn a rough request into a shared, execution-ready task, then run it or write the prompt.
 disable-model-invocation: true
 dependencies:
