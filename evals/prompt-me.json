@@ -35,9 +35,9 @@
       "id": "right-size-approved-plan-execution",
       "prompt": "Use prompt-me to prepare a brief for executing this already approved detailed plan, not to execute it now. In a small static site, change only the three button labels 'Send' to 'Submit' in contact.html, support.html, and feedback.html; leave attributes, handlers, layout, and other text unchanged. Verify the three rendered labels and that each form still submits through its existing handler. The files and existing form smoke checks are available to the executor; there are no unresolved design choices. I assume we need the strongest available model at maximum reasoning effort for reliable quality, but please assess whether that is actually warranted.",
       "criteria": [
-        "The brief includes one grouped recommendation for the task using a generic model class and reasoning effort, rather than named products or recommendations for prompt-me's own stages.",
-        "The response recommends a simpler capable executor and less than maximum reasoning effort, grounding the choice in the approved mechanical plan and straightforward checks rather than pursuing the cheapest option regardless of reliability.",
-        "The response gives a concise quality-headroom rationale, distinguishes its recommendation from any genuine Required capability, and does not present the suggested class or effort as a hard minimum.",
+        "The brief gives one short task-level recommendation with the Lightweight category, an explicit effort level, and a concise task-grounded reason, without asking for a model inventory or named-model mapping.",
+        "The response directly answers the user's maximum-effort question: a simpler capable executor and less than maximum effort suffice for the approved mechanical plan and straightforward checks, without pursuing cheapness over reliability.",
+        "The recommendation remains advisory and compact, without an unnecessary headroom or capability breakdown.",
         "The response preserves the approved scope and checks without reopening settled decisions, adding model-driven task or session boundaries, switching models, or executing the task."
       ]
     },
@@ -45,11 +45,11 @@
       "id": "differentiate-planning-and-mechanical-execution",
       "prompt": "Use prompt-me to prepare a brief for this fully specified documentation task, not to execute it now. We have two agreed steps for one small retry-protocol specification. First, derive and check a state-transition table for a worker that may crash before or after sending a request or recording its response: retries reuse a stable operation ID, the server atomically deduplicates that ID with its side effect, duplicate responses return the stored result, and a timeout cannot be treated as proof that the side effect did not happen. Show why each crash point preserves at-most-once side effects and eventual completion once the worker and server recover. Second, after the table is checked, copy its rows into three existing documentation templates using their fixed column mapping; a deterministic checker compares every copied cell with the source table. All policies, templates, mappings, and checks are settled, the executor receives them together, and deployment or production changes are out of scope. Recommend how to staff these two steps for reliable quality; do not perform either step.",
       "criteria": [
-        "The Models field covers the task's two meaningful steps with generic model-class and reasoning-effort recommendations, assigning stronger reasoning capability and more effort to crash-state analysis than to copying the settled table.",
-        "Each recommendation has a concise task-grounded quality rationale: planning must reason through failure interleavings, while mechanical execution has a checked source, fixed mapping, and deterministic verification.",
-        "The response treats capability and effort as distinct choices, justifies any maximum-effort choice instead of automatically pairing it with stronger capability, and presents conservative quality headroom as recommended rather than a Required minimum.",
+        "The model advice briefly assigns the Frontier category to crash-state analysis and the Lightweight category to copying the checked table, with an explicit effort recommendation for each.",
+        "The distinction is grounded in reasoning through failure interleavings versus a checked source, fixed mapping, and deterministic verification, without displaying a full model-selection worksheet.",
+        "Recommendations remain advisory; effort is chosen for the work rather than automatically pairing maximum effort with the stronger model, and routine headroom details stay out of the advice.",
         "The response preserves both deliverables and the dependency on a checked table, groups work around its shared evidence, and does not introduce extra passes or fresh sessions solely to vary models.",
-        "The response does not replace the requested brief with protocol execution, named-model rankings, automatic model switching, or questions reopening settled policies."
+        "The response does not replace the requested brief with protocol execution, model catalogs, automatic model switching, or questions reopening settled policies."
       ]
     },
     {
@@ -58,65 +58,21 @@
       "criteria": [
         "The response supplies a self-contained copyable execution prompt preserving the confirmed goal, two-image inputs, evidence limits, uncertainty handling, and verification, without claiming to inspect unavailable images or execute the task.",
         "Inside the copyable prompt, direct image-understanding capability is separately labeled Required with the task-grounded reason that visual differences cannot be recovered from the available textual alternatives.",
-        "Inside the same copyable prompt, a generic model-class recommendation and independent reasoning-effort recommendation survive as advisory guidance with a concise quality-headroom rationale, not as additional hard prerequisites or named-model rankings.",
+        "Inside the copyable prompt, the advisory recommendation includes a category, independently chosen effort, and concise task-grounded reason, without an unsolicited headroom breakdown or hard model-tier prerequisite.",
         "The response bases any context-capacity discussion on the two images and instructions needed together; it does not invent a numeric context minimum or require the optional searchable archive to fit in the context window.",
         "The response respects the confirmed brief and fresh-session handoff without reopening settled choices, adding model-driven passes, or treating recommendations as authorization to switch models."
       ]
+    },
+    {
+      "id": "use-familiar-lineup-concisely",
+      "prompt": "Use prompt-me to prepare a brief, not execute it. My configured lineup is DeepSeek for bounded repository scouting, Luna for settled mechanical edits, Sol as my usual default, and Astra for difficult design. Add cursor pagination to an existing authenticated read-only endpoint using this repository's established pagination conventions. Preserve existing authorization and response fields; return at most 100 records in stable created_at/id order; reject malformed cursors; verify ordering, page boundaries, empty results, and existing access restrictions. Product decisions are settled; inspect the existing endpoint and pagination conventions before editing. I use this lineup every day and want only the practical model recommendation, not a model comparison.",
+      "criteria": [
+        "The brief uses an appropriate Lightweight, Standard, or Frontier category for the relevant work rather than named models, a mapping, or a catalog of configured names.",
+        "Model advice is one short line containing the category, an effort recommendation, and a concise task-grounded reason, without extra headroom, capability, or rationale subsections.",
+        "The response preserves the task and verification scope without inventory questions, automatic model switching, or model-driven extra passes.",
+        "The response prepares the brief without executing it or claiming results."
+      ]
     }
   ],
-  "comparison": {
-    "suite_hash": "sha256:0183154f668ad448c3c1babfaecfc60a811c6dd0111bc202c12931c23c83c6f5",
-    "environment": {
-      "agent": "OMP completion",
-      "model": "openai-codex/gpt-5.6-sol"
-    },
-    "base": {
-      "skill_hash": "sha256:09291eb27e8115d9b5186f12cdf278bb3da7467834aad2280a1b7ed77031fa3d",
-      "score": 83
-    },
-    "current": {
-      "skill_hash": "sha256:fec4ceb0b188e49a9f815d656b7d20d471df63374d3120648c590f5534846359",
-      "score": 93
-    },
-    "cases": [
-      {
-        "id": "clarify-consequential-retention-gaps",
-        "base": 91,
-        "current": 95,
-        "rationale": "Both outputs elicited the consequential retention choices without inventing a period. The current output more directly covered the trigger, threshold, exemptions, scope, reversibility, and authorization, while both lost points for recommended implementation details and dependency-installation noise."
-      },
-      {
-        "id": "choose-smart-zone-and-session",
-        "base": 98,
-        "current": 99,
-        "rationale": "Both outputs gave a justified split, a complete ordered pass sequence with prerequisites and checks, and a new-session recommendation tied to rejected designs and the unrelated incident. The current output made the evidence boundaries and per-pass completion criteria slightly more explicit."
-      },
-      {
-        "id": "confirmation-is-not-authorization",
-        "base": 100,
-        "current": 100,
-        "rationale": "Both outputs treated the reply only as confirmation, recommended continuing in the relevant session, made no implementation claim, and required separate explicit authorization before execution."
-      },
-      {
-        "id": "right-size-approved-plan-execution",
-        "base": 70,
-        "current": 76,
-        "rationale": "Both outputs preserved the exact edit and verification scope without executing. The current output added one grouped Lightweight/low-effort recommendation with separate headroom and required capabilities, but both included unnecessary session and confirmation process, and the current headroom rationale emphasized context more than reliability."
-      },
-      {
-        "id": "differentiate-planning-and-mechanical-execution",
-        "base": 49,
-        "current": 96,
-        "rationale": "The base output preserved the work but omitted the required per-step model guidance. The current output assigned Frontier/high effort to failure-interleaving analysis and Lightweight/low effort to deterministic copying, with task-grounded reasons, advisory headroom, and the checked-table dependency intact."
-      },
-      {
-        "id": "carry-required-and-recommended-into-handoff",
-        "base": 89,
-        "current": 94,
-        "rationale": "Both outputs produced a strong image-only handoff. The current output separately labeled direct multimodal inspection as required and carried Standard/moderate advisory guidance plus context headroom into the prompt; minor deductions remained for combined class/effort presentation and dependency-installation noise."
-      }
-    ],
-    "confirmed_by": "azarakovskiy",
-    "confirmed_at": "2026-10-10T18:49:30Z"
-  }
+  "comparison": null
 }

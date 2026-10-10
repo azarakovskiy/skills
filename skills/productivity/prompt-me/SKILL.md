@@ -32,16 +32,15 @@ Assess whether the clarified request can be executed and verified in one **smart
 
 ### Models
 
-Recommend a generic model class and reasoning effort for each meaningful execution step or pass. Give a short task-grounded reason. Derive recommendations from the clarified task; group steps with equal needs and give a simple task one recommendation. Preserve existing task and session boundaries.
+Recommend model categories, leaving the user to map them to their preconfigured lineup. Keep specific model names, inventories, and mappings out of the advice. Recommendations are advisory; preserve task/session boundaries and leave switching to the user.
 
-- **Class:** Use exactly one class: **Lightweight** for bounded routine work or a settled plan with straightforward checks; **Standard** for ordinary multi-step judgment; **Frontier** for difficult planning, ambiguity, demanding reasoning, or costly mistakes.
-- **Effort:** Choose independently: low for mechanical execution, moderate for ordinary judgment, high for demanding reasoning. Use maximum only with a task-grounded reason.
-- **Recommended headroom:** Choose enough margin for reliable completion. Label that margin as advisory headroom rather than a minimum.
-- **Required:** Separately label must-have capabilities and explain why the task needs them. Ground context requirements in specific material that must be held together; optional retrieval stays outside the hard threshold.
+Use **Lightweight** for bounded routine work or settled execution with straightforward checks; **Standard** for ordinary multi-step judgment; **Frontier** for difficult planning, ambiguity, demanding reasoning, or costly mistakes. Choose effort independently: low for mechanical work, moderate for ordinary judgment, high for demanding reasoning, and maximum only with task-grounded justification. Favor reliable completion over price alone.
 
-Use generic classes and leave model choice or switching to the user.
+Every recommendation includes **category, effort, and one concise task-grounded reason**. Default to one short **Models** line, grouping equal needs rather than listing optional delegations. Expand only for consequential differences or explicit questions; keep routine reliability headroom internal.
 
-**Done when:** the brief says fits or split with a reason; every proposed pass has a deliverable, prerequisites, and check; and every meaningful execution step or pass has a model class, effort, reason, and any required capability labeled separately.
+Label a capability **Required** only when it changes which model is viable, with a brief reason; ordinary file/tool access belongs with execution prerequisites. Ground context requirements in the material needed together, not optional retrieval.
+
+**Done when:** the brief says fits or split with a reason; every proposed pass has a deliverable, prerequisites, and check; every model recommendation includes a category, effort, and concise reason; and choice-constraining capabilities are labeled **Required**.
 
 ## 3. Session assessment
 
@@ -68,7 +67,7 @@ Present the brief with this template. Default to recommending a session. Choose 
 - **Approach:** <settled decisions and executor free choices>
 - **Verification:** <checks>
 - **Smart zone:** <fits or split, with reason and proposed pass boundaries>
-- **Models:** <step/pass → Lightweight, Standard, or Frontier + effort — reason; recommended headroom and separately labeled Required capabilities when applicable>
+- **Models:** <category, effort — concise task-grounded reason; group equal needs and separately label Required capabilities only when applicable>
 - **Session:** <here or new, with reason>
 - **Delivery:** <recommend session, execute here, or produce a prompt>
 
