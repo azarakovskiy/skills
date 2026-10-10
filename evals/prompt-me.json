@@ -30,40 +30,39 @@
         "The response states a concrete recommendation to continue here or use a new session, with a reason tied to the available context.",
         "The response makes clear that execution requires separate explicit authorization and offers the appropriate next step without treating confirmation itself as permission."
       ]
+    },
+    {
+      "id": "right-size-approved-plan-execution",
+      "prompt": "Use prompt-me to prepare a brief for executing this already approved detailed plan, not to execute it now. In a small static site, change only the three button labels 'Send' to 'Submit' in contact.html, support.html, and feedback.html; leave attributes, handlers, layout, and other text unchanged. Verify the three rendered labels and that each form still submits through its existing handler. The files and existing form smoke checks are available to the executor; there are no unresolved design choices. I assume we need the strongest available model at maximum reasoning effort for reliable quality, but please assess whether that is actually warranted.",
+      "criteria": [
+        "The brief includes one grouped recommendation for the task using a generic model class and reasoning effort, rather than named products or recommendations for prompt-me's own stages.",
+        "The response recommends a simpler capable executor and less than maximum reasoning effort, grounding the choice in the approved mechanical plan and straightforward checks rather than pursuing the cheapest option regardless of reliability.",
+        "The response gives a concise quality-headroom rationale, distinguishes its recommendation from any genuine Required capability, and does not present the suggested class or effort as a hard minimum.",
+        "The response preserves the approved scope and checks without reopening settled decisions, adding model-driven task or session boundaries, switching models, or executing the task."
+      ]
+    },
+    {
+      "id": "differentiate-planning-and-mechanical-execution",
+      "prompt": "Use prompt-me to prepare a brief for this fully specified documentation task, not to execute it now. We have two agreed steps for one small retry-protocol specification. First, derive and check a state-transition table for a worker that may crash before or after sending a request or recording its response: retries reuse a stable operation ID, the server atomically deduplicates that ID with its side effect, duplicate responses return the stored result, and a timeout cannot be treated as proof that the side effect did not happen. Show why each crash point preserves at-most-once side effects and eventual completion once the worker and server recover. Second, after the table is checked, copy its rows into three existing documentation templates using their fixed column mapping; a deterministic checker compares every copied cell with the source table. All policies, templates, mappings, and checks are settled, the executor receives them together, and deployment or production changes are out of scope. Recommend how to staff these two steps for reliable quality; do not perform either step.",
+      "criteria": [
+        "The Models field covers the task's two meaningful steps with generic model-class and reasoning-effort recommendations, assigning stronger reasoning capability and more effort to crash-state analysis than to copying the settled table.",
+        "Each recommendation has a concise task-grounded quality rationale: planning must reason through failure interleavings, while mechanical execution has a checked source, fixed mapping, and deterministic verification.",
+        "The response treats capability and effort as distinct choices, justifies any maximum-effort choice instead of automatically pairing it with stronger capability, and presents conservative quality headroom as recommended rather than a Required minimum.",
+        "The response preserves both deliverables and the dependency on a checked table, groups work around its shared evidence, and does not introduce extra passes or fresh sessions solely to vary models.",
+        "The response does not replace the requested brief with protocol execution, named-model rankings, automatic model switching, or questions reopening settled policies."
+      ]
+    },
+    {
+      "id": "carry-required-and-recommended-into-handoff",
+      "prompt": "Continue prompt-me from a confirmed brief and produce the reusable execution prompt for a fresh session; do not execute the task here. Confirmed goal: compare the before.png and after.png dashboard screenshots that will be attached in that session, and report changed chart colors, overlapping labels, and clipped legends with screenshot locations. The task requires direct visual inspection because these differences are not available in text, OCR, source files, or alternative tool output. Use only those two images as evidence, report uncertainty rather than inventing measurements, and verify every reported difference against both images. The brief is approved, all decisions are settled, and the fresh session was chosen because this thread contains rejected drafts. Assess the model class and reasoning effort for reliable execution and carry that guidance into the copyable prompt. An optional searchable archive of old dashboards exists, but it is not needed for this comparison.",
+      "criteria": [
+        "The response supplies a self-contained copyable execution prompt preserving the confirmed goal, two-image inputs, evidence limits, uncertainty handling, and verification, without claiming to inspect unavailable images or execute the task.",
+        "Inside the copyable prompt, direct image-understanding capability is separately labeled Required with the task-grounded reason that visual differences cannot be recovered from the available textual alternatives.",
+        "Inside the same copyable prompt, a generic model-class recommendation and independent reasoning-effort recommendation survive as advisory guidance with a concise quality-headroom rationale, not as additional hard prerequisites or named-model rankings.",
+        "The response bases any context-capacity discussion on the two images and instructions needed together; it does not invent a numeric context minimum or require the optional searchable archive to fit in the context window.",
+        "The response respects the confirmed brief and fresh-session handoff without reopening settled choices, adding model-driven passes, or treating recommendations as authorization to switch models."
+      ]
     }
   ],
-  "comparison": {
-    "suite_hash": "sha256:92a144aad97cb817c257fae45ea7804b0a9464ef01585816bee919e650d4449c",
-    "environment": {
-      "agent": "OMP completion",
-      "model": "openai-codex/gpt-5.6-sol"
-    },
-    "base": null,
-    "current": {
-      "skill_hash": "sha256:09291eb27e8115d9b5186f12cdf278bb3da7467834aad2280a1b7ed77031fa3d",
-      "score": 97
-    },
-    "cases": [
-      {
-        "id": "clarify-consequential-retention-gaps",
-        "base": null,
-        "current": 94,
-        "rationale": "The response correctly refuses to assume a retention period, legal/business exemptions, or deletion reversibility, and it makes policy approval a gate before any production deletion. Its questions are detailed enough to establish data scope, eligibility triggers, blockers, deletion semantics, authorities, and validation requirements. The main weakness is slight overreach: it prescribes a substantial set of implementation safeguards and suggests example blockers that should remain explicitly subject to approved policy, rather than cleanly separating user-owned policy decisions from executor-owned implementation choices."
-      },
-      {
-        "id": "choose-smart-zone-and-session",
-        "base": null,
-        "current": 98,
-        "rationale": "The output fully satisfies the evaluation criteria. It gives a clear split verdict grounded in connected working sets and verification burden, proposes a minimal ordered sequence with prerequisites, deliverables, and checks for every pass, and keeps shared-evidence work together through an architecture/contract foundation followed by component implementation and integrated operations. It also explicitly recommends a new session and identifies both rejected authentication designs and the unrelated incident investigation as context interference. The only minor weakness is that the claim that this is the “smallest” set of passes is implicit rather than explicitly defended, and mobile may later split by repository/platform."
-      },
-      {
-        "id": "confirmation-is-not-authorization",
-        "base": null,
-        "current": 100,
-        "rationale": "The response fully satisfies all four criteria: it accepts the confirmation without reopening requirements, avoids any execution claim, recommends continuing in the current session based on retained context, and clearly distinguishes confirmation from explicit authorization to execute."
-      }
-    ],
-    "confirmed_by": "azarakovskiy",
-    "confirmed_at": "2026-10-10T11:49:54Z"
-  }
+  "comparison": null
 }
