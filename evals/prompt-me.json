@@ -64,5 +64,59 @@
       ]
     }
   ],
-  "comparison": null
+  "comparison": {
+    "suite_hash": "sha256:0183154f668ad448c3c1babfaecfc60a811c6dd0111bc202c12931c23c83c6f5",
+    "environment": {
+      "agent": "OMP completion",
+      "model": "openai-codex/gpt-5.6-sol"
+    },
+    "base": {
+      "skill_hash": "sha256:09291eb27e8115d9b5186f12cdf278bb3da7467834aad2280a1b7ed77031fa3d",
+      "score": 83
+    },
+    "current": {
+      "skill_hash": "sha256:fec4ceb0b188e49a9f815d656b7d20d471df63374d3120648c590f5534846359",
+      "score": 93
+    },
+    "cases": [
+      {
+        "id": "clarify-consequential-retention-gaps",
+        "base": 91,
+        "current": 95,
+        "rationale": "Both outputs elicited the consequential retention choices without inventing a period. The current output more directly covered the trigger, threshold, exemptions, scope, reversibility, and authorization, while both lost points for recommended implementation details and dependency-installation noise."
+      },
+      {
+        "id": "choose-smart-zone-and-session",
+        "base": 98,
+        "current": 99,
+        "rationale": "Both outputs gave a justified split, a complete ordered pass sequence with prerequisites and checks, and a new-session recommendation tied to rejected designs and the unrelated incident. The current output made the evidence boundaries and per-pass completion criteria slightly more explicit."
+      },
+      {
+        "id": "confirmation-is-not-authorization",
+        "base": 100,
+        "current": 100,
+        "rationale": "Both outputs treated the reply only as confirmation, recommended continuing in the relevant session, made no implementation claim, and required separate explicit authorization before execution."
+      },
+      {
+        "id": "right-size-approved-plan-execution",
+        "base": 70,
+        "current": 76,
+        "rationale": "Both outputs preserved the exact edit and verification scope without executing. The current output added one grouped Lightweight/low-effort recommendation with separate headroom and required capabilities, but both included unnecessary session and confirmation process, and the current headroom rationale emphasized context more than reliability."
+      },
+      {
+        "id": "differentiate-planning-and-mechanical-execution",
+        "base": 49,
+        "current": 96,
+        "rationale": "The base output preserved the work but omitted the required per-step model guidance. The current output assigned Frontier/high effort to failure-interleaving analysis and Lightweight/low effort to deterministic copying, with task-grounded reasons, advisory headroom, and the checked-table dependency intact."
+      },
+      {
+        "id": "carry-required-and-recommended-into-handoff",
+        "base": 89,
+        "current": 94,
+        "rationale": "Both outputs produced a strong image-only handoff. The current output separately labeled direct multimodal inspection as required and carried Standard/moderate advisory guidance plus context headroom into the prompt; minor deductions remained for combined class/effort presentation and dependency-installation noise."
+      }
+    ],
+    "confirmed_by": "azarakovskiy",
+    "confirmed_at": "2026-10-10T18:49:30Z"
+  }
 }

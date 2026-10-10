@@ -1,6 +1,6 @@
 ---
 name: prompt-me
-description: Clarify a rough request into a confirmed task brief and recommend where to execute it.
+description: Turn a rough request into a confirmed task brief with model and session recommendations.
 disable-model-invocation: true
 dependencies:
   - name: grilling
@@ -17,24 +17,37 @@ Check the request against [prompt-quality.md](prompt-quality.md). If no conseque
 
 When consequential gaps remain, load and run `grilling`. If unavailable, give the warning and install instruction in [dependencies.md](dependencies.md), then use [grilling_fallback.md](grilling_fallback.md).
 
-Limit the session to gaps affecting outcome, scope, risk, or verification: ambiguous wording, missing facts or user decisions, and conflicting instructions. Leave safe implementation choices to the executor.
+Clarify only contradictions and missing user decisions that change the outcome, scope, risk, or verification. Treat a request presented as fully specified or settled as ready unless it contains one of those gaps. Repository paths, source locations, and existing implementation details stay as execution-time lookups when the brief can require their inspection before reliance.
 
-**Done when:** every consequential gap is resolved and the brief meets the prompt-quality checklist. Only execution-time facts with an explicit lookup or check before reliance may remain unknown.
+**Done when:** every consequential gap is resolved and the brief meets the prompt-quality checklist.
 
-## 2. Assess smart-zone fit
+## 2. Assess execution fit
+
+### Smart zone
 
 Assess whether the clarified request can be executed and verified in one **smart zone**: a low-load context where the model can reliably track the goal, constraints, evidence, and checks together. Reliability can decline before the advertised context limit; there is no universal token cutoff.
 
 - **Fits:** recommend one pass when the outcome, connected working set, and verification loop can stay in that zone.
 - **Does not fit:** recommend splitting at seams that separate context-heavy working sets, with explicit inputs and outputs between passes. Name the material that makes one pass too large and propose the smallest sequence that preserves the whole goal. Each pass must produce a verifiable result; related steps sharing the same evidence stay together.
 
-**Done when:** the brief says fits or split with a reason, and each proposed pass has a deliverable, prerequisites, and check.
+### Models
+
+Recommend a generic model class and reasoning effort for each meaningful execution step or pass. Give a short task-grounded reason. Derive recommendations from the clarified task; group steps with equal needs and give a simple task one recommendation. Preserve existing task and session boundaries.
+
+- **Class:** Use exactly one class: **Lightweight** for bounded routine work or a settled plan with straightforward checks; **Standard** for ordinary multi-step judgment; **Frontier** for difficult planning, ambiguity, demanding reasoning, or costly mistakes.
+- **Effort:** Choose independently: low for mechanical execution, moderate for ordinary judgment, high for demanding reasoning. Use maximum only with a task-grounded reason.
+- **Recommended headroom:** Choose enough margin for reliable completion. Label that margin as advisory headroom rather than a minimum.
+- **Required:** Separately label must-have capabilities and explain why the task needs them. Ground context requirements in specific material that must be held together; optional retrieval stays outside the hard threshold.
+
+Use generic classes and leave model choice or switching to the user.
+
+**Done when:** the brief says fits or split with a reason; every proposed pass has a deliverable, prerequisites, and check; and every meaningful execution step or pass has a model class, effort, reason, and any required capability labeled separately.
 
 ## 3. Session assessment
 
 Stay when this session holds useful context and its instructions match the brief. Recommend a fresh session when conflicting earlier directions, rejected drafts likely to be reused, or dominant unrelated history would crowd or steer execution.
 
-Also recommend a fresh session when resolving a vague request loaded substantial prompt-building material that execution does not need: interview scaffolding, prompt drafts, or guidance on how to write a prompt. Distinguish this from ordinary clarification that supplies useful execution facts.
+Also recommend a fresh session when resolving a vague request loaded substantial prompt-building material that execution does not need: interview scaffolding, prompt drafts, or guidance on how to write a prompt. Ordinary clarification and concise model recommendations remain useful execution context.
 
 Name the material that would interfere or crowd the working context; length alone is not a reason to restart.
 
@@ -55,6 +68,7 @@ Present the brief with this template. Default to recommending a session. Choose 
 - **Approach:** <settled decisions and executor free choices>
 - **Verification:** <checks>
 - **Smart zone:** <fits or split, with reason and proposed pass boundaries>
+- **Models:** <step/pass → Lightweight, Standard, or Frontier + effort — reason; recommended headroom and separately labeled Required capabilities when applicable>
 - **Session:** <here or new, with reason>
 - **Delivery:** <recommend session, execute here, or produce a prompt>
 

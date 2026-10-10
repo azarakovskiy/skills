@@ -6,6 +6,7 @@ Apply [prompt-quality.md](prompt-quality.md) to write the confirmed brief as the
 - Add an example only when the output pattern would otherwise be ambiguous.
 - Separate instructions, context, and input with a heading or a tag only when they could be confused.
 - Write one prompt per agreed pass. Name prerequisite outputs and where to find them so later passes can resume without the earlier conversation.
+- Carry the confirmed **Models** guidance into each prompt it applies to. Keep recommendations advisory and **Required** capabilities separate.
 
 Revalidate the finished prompt against the confirmed brief: preserve every requirement and settled decision, remove contradictions or invented requirements, and keep remaining unknowns explicit.
 
