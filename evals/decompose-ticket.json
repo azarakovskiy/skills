@@ -5,7 +5,7 @@
       "id": "pass-through-single-unit",
       "prompt": "Apply decompose-ticket to this ticket.\n\n# Add --compact to the inspect command\n\nOutcome: running `tool inspect --compact PATH` prints the same inspection data as `tool inspect PATH`, rendered on one line.\n\nThe change is confined to the `inspect` command in `src/commands/inspect.py`; the flag and compact rendering are exercised together by one CLI check. No other command or module changes.",
       "criteria": [
-        "Concludes that the ticket should be implemented as-is because it has one seam, one entry point, and one check that proves the outcome.",
+        "Returns `implement as-is`; the ticket has one seam, one entry point, and one check, so no split is warranted.",
         "Leaves the ticket unmarked and does not add an Orchestrated marker or Subtasks section.",
         "Does not invent additional seams, entry points, or work merely to force a decomposition."
       ]
@@ -29,38 +29,5 @@
       ]
     }
   ],
-  "comparison": {
-    "suite_hash": "sha256:0480cc3a07f9501a37fd699e03e19861134dec3ee0794925544fa3df1a09c9c5",
-    "environment": {
-      "agent": "OMP completion",
-      "model": "openai-codex/gpt-5.6-sol"
-    },
-    "base": null,
-    "current": {
-      "skill_hash": "sha256:7a26c7ece922923a854bc1978961d64ba81aa6d8940af39575e468073e1750df",
-      "score": 96
-    },
-    "cases": [
-      {
-        "id": "pass-through-single-unit",
-        "base": null,
-        "current": 90,
-        "rationale": "The output reaches the correct implementation decision and introduces no decomposition artifacts or invented work. However, it does not explicitly state the required reasoning that the ticket has one seam, one entry point, and one validating check."
-      },
-      {
-        "id": "split-across-seams-and-entry-points",
-        "base": null,
-        "current": 99,
-        "rationale": "The output satisfies all three criteria with a clear three-wave decomposition. It explicitly marks the ticket as orchestrated, puts a contract-freezing walking skeleton first, gives each seam and entry point bounded ownership plus contract/verification/dependency fields, and reserves full acceptance validation and stub removal for the final integration task. The only minor ambiguity is that the final retrieval mechanism for each entry point is not named as concretely as the submission mechanisms, though it closely tracks the ticket’s own wording."
-      },
-      {
-        "id": "refuse-false-boundary",
-        "base": null,
-        "current": 100,
-        "rationale": "The output fully satisfies all criteria: it explicitly blocks decomposition due to the lack of a substitutable boundary in the shared atomic loop, avoids fabricating independent subtasks, and states that any split would violate the ticket’s design constraints without claiming implementation or verification results."
-      }
-    ],
-    "confirmed_by": "azarakovskiy",
-    "confirmed_at": "2026-10-10T11:49:54Z"
-  }
+  "comparison": null
 }
