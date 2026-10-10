@@ -8,7 +8,7 @@ metadata:
 
 # Promote Skill
 
-Invoke as `promote-skill <exact skill name>`. Work locally with repository tools, clean local agents, and the Python standard library. Keep model outputs in the conversation only; write no raw output, commit, or push.
+Invoke as `promote-skill <exact skill name>`. This is the final release workflow. Work locally with repository tools, clean local agents, and the Python standard library. Keep model outputs in the conversation only; write no raw output, commit, or push.
 
 ## 1. Select
 
