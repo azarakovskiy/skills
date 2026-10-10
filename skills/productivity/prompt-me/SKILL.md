@@ -1,6 +1,6 @@
 ---
 name: prompt-me
-description: Turn a rough request into a shared, execution-ready task, then run it or write the prompt.
+description: Clarify a rough request into a confirmed task brief and recommend where to execute it.
 disable-model-invocation: true
 dependencies:
   - name: grilling
@@ -9,43 +9,40 @@ dependencies:
     repo: mattpocock/skills
 ---
 
-The text after this invocation is a task. Turn it into the minimum task brief an agent can execute without consequential guesses. A clear, low-risk request should pass quickly.
+Turn the user's prompt into the minimum task brief an agent can execute without consequential guesses. A clear, low-risk request should pass quickly.
 
-## 1. Map the decision tree
+## 1. Clarify
 
-Map only gaps that could change the outcome, risk, or scope. Classify each as:
+Check the request against [prompt-quality.md](prompt-quality.md). If no consequential gaps remain, continue directly to step 2 without loading `grilling`.
 
-- **Fact:** discoverable from the environment.
-- **Decision:** only the user can choose.
-- **Free choice:** safe for the executor to choose.
+When consequential gaps remain, load and run `grilling`. If unavailable, give the warning and install instruction in [dependencies.md](dependencies.md), then use [grilling_fallback.md](grilling_fallback.md).
 
-The **frontier** is every decision whose prerequisites are settled. Answers can expose dependent decisions, so recompute the tree after every user response.
+Limit the session to gaps affecting outcome, scope, risk, or verification: ambiguous wording, missing facts or user decisions, and conflicting instructions. Leave safe implementation choices to the executor.
 
-**Done when:** every consequential gap is classified and the current frontier is known.
+**Done when:** every consequential gap is resolved and the brief meets the prompt-quality checklist. Only execution-time facts with an explicit lookup or check before reliance may remain unknown.
 
-## 2. Resolve the frontier
+## 2. Assess smart-zone fit
 
-Before each round, look up only the facts needed to settle or ask the current frontier. Stop each lookup when you have the fact, a source pointer, or an explicit unknown. Carry findings forward as concise source pointers. Save implementation exploration for execution.
+Assess whether the clarified request can be executed and verified in one **smart zone**: a low-load context where the model can reliably track the goal, constraints, evidence, and checks together. Reliability can decline before the advertised context limit; there is no universal token cutoff.
 
-Run the round as a grilling session. Call the skill tool for `grilling` and follow that skill. When the skill tool cannot find `grilling`, give the user the install instruction in [dependencies.md](dependencies.md), read [grilling_fallback.md](grilling_fallback.md), and run the round from that file.
+- **Fits:** recommend one pass when the outcome, connected working set, and verification loop can stay in that zone.
+- **Does not fit:** recommend splitting at seams that separate context-heavy working sets, with explicit inputs and outputs between passes. Name the material that makes one pass too large and propose the smallest sequence that preserves the whole goal. Each pass must produce a verifiable result; related steps sharing the same evidence stay together.
 
-Facts are the agent's work; decisions are the user's. Free choices are defaults in the brief, not questions. After each answer, recompute the tree and run the next round. Move on only when the frontier stays empty after that recomputation.
+**Done when:** the brief says fits or split with a reason, and each proposed pass has a deliverable, prerequisites, and check.
 
-**Done when:** the frontier is empty and no consequential decision is silently assumed.
+## 3. Session assessment
 
-## 3. Smart zone
+Stay when this session holds useful context and its instructions match the brief. Recommend a fresh session when conflicting earlier directions, rejected drafts likely to be reused, or dominant unrelated history would crowd or steer execution.
 
-The smart zone is the low-context part of the window where the model is still sharp. Quality drops as context fills, long before the advertised limit.
+Also recommend a fresh session when resolving a vague request loaded substantial prompt-building material that execution does not need: interview scaffolding, prompt drafts, or guidance on how to write a prompt. Distinguish this from ordinary clarification that supplies useful execution facts.
 
-The task fits one pass when it has one outcome, one connected working set, and one verification loop that can stay in that zone. Split when it has independent outcomes, unrelated systems, phases that need different evidence, or enough material to crowd the task out of the zone. Propose the smallest sequence in which each pass still finishes something, and ask the user to narrow the task or approve the sequence.
+Name the material that would interfere or crowd the working context; length alone is not a reason to restart.
 
-**Done when:** the brief says fits or split, with the reason, and a split has an agreed boundary.
+**Done when:** the brief says here or new with a concrete reason.
 
 ## 4. Confirm
 
-Default to executing here. Produce a reusable prompt only when the user asks for one or corrects the default.
-
-Present every brief with this exact template:
+Present the brief with this template. Default to recommending a session. Choose execution only when the user explicitly asks to execute the confirmed brief; describing the task alone is not that authorization. Honor requests for a reusable prompt.
 
 ```markdown
 ## Task brief
@@ -54,24 +51,23 @@ Present every brief with this exact template:
 - **Artifact:** <what will be created or changed>
 - **Done when:** <observable evidence>
 - **Boundaries:** <scope, exclusions, and permissions>
-- **Context:** <source pointers and explicit unknowns>
-- **Approach:** <chosen approach and executor free choices>
+- **Context:** <source pointers, necessary user-provided facts, and explicit unknowns>
+- **Approach:** <settled decisions and executor free choices>
 - **Verification:** <checks>
-- **Smart zone:** <fits or split, with reason and agreed boundary if split>
-- **Delivery:** <execute here or produce a prompt>
+- **Smart zone:** <fits or split, with reason and proposed pass boundaries>
+- **Session:** <here or new, with reason>
+- **Delivery:** <recommend session, execute here, or produce a prompt>
 
 **Is this what you want?**
 ```
 
-Wait for an explicit yes. A correction reshapes the decision tree: return to the frontier before presenting a revised brief.
+Wait for explicit confirmation of the brief and any split boundaries. A correction reopens affected gaps: return to clarification and reassess fit before presenting the revised brief.
 
-**Done when:** the user confirms the brief.
+**Done when:** the user confirms the current brief.
 
-## 5. Session
+## 5. Deliver
 
-Stay when this session holds context the executor needs and its instructions match the brief. Recommend a new session when competing instructions, rejected drafts, or unrelated context would crowd the task. Exploration the executor would repeat is a reason to stay. Say the verdict and reason in one sentence.
+After confirmation, state the session recommendation:
 
-## 6. Deliver
-
-- **Execute here:** carry out the confirmed brief.
-- **Produce a prompt:** call the skill tool for `writing-for-agents` and follow that skill. When the skill tool cannot find `writing-for-agents`, give the user the install instruction in [dependencies.md](dependencies.md) and read [writing_for_agents_fallback.md](writing_for_agents_fallback.md). Then read [write.md](write.md) and write the prompt from the brief.
+- **Here:** recommend continuing here. Execute only if the user also explicitly authorized execution; confirming the brief alone is not authorization.
+- **New session, or reusable prompt requested:** load `writing-for-agents`, then follow [write.md](write.md). If unavailable, give the warning and install instruction in [dependencies.md](dependencies.md) and use [writing_for_agents_fallback.md](writing_for_agents_fallback.md) before writing.

@@ -1,0 +1,72 @@
+{
+  "skill": "zoom-out",
+  "cases": [
+    {
+      "id": "technical-abstraction",
+      "prompt": "Explain backpressure in streaming systems to an application developer who understands producers, consumers, and queues but has not worked with stream processing.",
+      "criteria": [
+        "Gives a concise explanation of backpressure and the problem it prevents.",
+        "Sets clear boundaries around what is being explained rather than drifting into a survey of streaming systems.",
+        "Identifies the main participants and explains how demand or capacity information moves between them.",
+        "Uses a concrete producer-consumer example and connects it back to the overall system.",
+        "Defines any additional technical terms needed to follow the explanation."
+      ]
+    },
+    {
+      "id": "bounded-comparison",
+      "prompt": "Compare optimistic and pessimistic locking for an inventory-reservation service. Limit the comparison to contention, failure behavior, and operational cost; do not discuss database-specific syntax or APIs.",
+      "criteria": [
+        "Explains the shared purpose of both locking approaches before contrasting them.",
+        "Compares the approaches on contention, failure behavior, and operational cost.",
+        "Relates the tradeoffs to the inventory-reservation context with at least one concrete scenario.",
+        "Respects the requested boundary by omitting database-specific syntax and API details.",
+        "Makes the circumstances favoring each approach understandable without declaring a universal winner."
+      ]
+    },
+    {
+      "id": "single-map-zoom-cycle",
+      "prompt": "How does entering example.com in a browser lead to the browser learning which server to contact? Explain only the DNS lookup, assuming the reader knows what an IP address is.",
+      "criteria": [
+        "Summarizes DNS's role in translating the name into information the browser can use to contact a server.",
+        "Maps the relevant participants and the order in which they interact.",
+        "Walks through one concrete lookup of example.com and then reconnects that walkthrough to the overall map.",
+        "Keeps the explanation to DNS lookup and does not drift into HTTP, TLS, or page rendering.",
+        "Stops after the requested level of detail without introducing unexplained concepts or unnecessary deeper cycles."
+      ]
+    }
+  ],
+  "comparison": {
+    "suite_hash": "sha256:b2ed8f566302601c9b71c936ad31fc8d5d408bb917b7977c0badb373d5fe24bf",
+    "environment": {
+      "agent": "OMP completion",
+      "model": "openai-codex/gpt-5.6-sol"
+    },
+    "base": null,
+    "current": {
+      "skill_hash": "sha256:7220d1ccf53ed67ecd82107dea596977678362c9f8e06e653496b88ccb33f628",
+      "score": 96
+    },
+    "cases": [
+      {
+        "id": "technical-abstraction",
+        "base": null,
+        "current": 95,
+        "rationale": "The response satisfies all five criteria with a clear definition, explicit scope, a strong explanation of participants and reverse-flowing capacity signals, and a concrete numerical example tied back to pipeline-wide behavior. It also defines the extra concepts it introduces. The main deduction is for concision: although well organized, it is substantially longer than necessary for an application developer seeking an explanation and expands into several implementation variants and overload policies."
+      },
+      {
+        "id": "bounded-comparison",
+        "base": null,
+        "current": 100,
+        "rationale": "The output fully satisfies all five criteria. It first establishes the shared purpose of preventing overselling, then clearly contrasts optimistic and pessimistic locking across exactly the requested dimensions. It grounds the tradeoffs in concrete inventory scenarios, avoids database-specific syntax and APIs, and explains when each approach is favored without asserting a universal winner."
+      },
+      {
+        "id": "single-map-zoom-cycle",
+        "base": null,
+        "current": 94,
+        "rationale": "The output satisfies all five criteria: it clearly states DNS’s purpose, gives the participant sequence, walks through a concrete example.com lookup, reconnects that walkthrough to the browser receiving usable IP addresses, and explicitly avoids HTTP/TLS/rendering. The only minor issue is that mentioning CNAME introduces an optional recursive branch that is not needed for the requested level and is slightly less concrete than the otherwise direct example.com walkthrough."
+      }
+    ],
+    "confirmed_by": "azarakovskiy",
+    "confirmed_at": "2026-10-10T11:49:54Z"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "skill": "prompt-me",
+  "cases": [
+    {
+      "id": "clarify-consequential-retention-gaps",
+      "prompt": "Use prompt-me to turn this request into an executable task brief: Automatically delete old customer records from production. We have not decided how old records must be, which records must be retained for legal or business reasons, or whether deletion must be reversible.",
+      "criteria": [
+        "The response does not invent a retention period, exemption policy, or reversibility requirement.",
+        "The response asks the user to resolve the missing choices that could materially change the outcome, scope, risk, or acceptance criteria before treating the brief as confirmed.",
+        "The questions are specific enough for the user's answers to determine what may be deleted and what protections or verification the task requires.",
+        "The response avoids burdening the user with safe implementation choices that an executor can make later."
+      ]
+    },
+    {
+      "id": "choose-smart-zone-and-session",
+      "prompt": "Use prompt-me to assess this fully specified request: replace password authentication with passkeys across the database, API, web app, and mobile apps; preserve account recovery; migrate existing users; stage the rollout; update operator documentation; and verify each client plus rollback. This thread also contains several rejected authentication designs and a long unrelated incident investigation. Decide whether execution fits one smart zone and whether it should continue in this session or a new one.",
+      "criteria": [
+        "The response gives an explicit fits-or-split verdict and explains which connected working sets and verification demands determine it.",
+        "If splitting, the response proposes the smallest ordered set of passes that preserves the whole requested outcome, with a deliverable, prerequisites, and an observable check for every pass.",
+        "The response keeps work that depends on the same evidence together rather than producing arbitrary size-based chunks.",
+        "The response explicitly recommends this session or a new session and names the rejected designs and unrelated investigation as relevant context interference rather than relying on conversation length alone."
+      ]
+    },
+    {
+      "id": "confirmation-is-not-authorization",
+      "prompt": "Continue a prompt-me workflow from this state. Your previous message presented a complete brief to add per-account API rate limiting, return HTTP 429 when the limit is exceeded, document the limit, and verify allowed and rejected requests. My reply is: ‘Yes, that brief is correct.’ I have not asked you to execute the work.",
+      "criteria": [
+        "The response treats the user's reply as confirmation of the current brief without reopening already settled requirements.",
+        "The response does not implement the task, claim that implementation started, or claim that any requested result was produced.",
+        "The response states a concrete recommendation to continue here or use a new session, with a reason tied to the available context.",
+        "The response makes clear that execution requires separate explicit authorization and offers the appropriate next step without treating confirmation itself as permission."
+      ]
+    }
+  ],
+  "comparison": {
+    "suite_hash": "sha256:92a144aad97cb817c257fae45ea7804b0a9464ef01585816bee919e650d4449c",
+    "environment": {
+      "agent": "OMP completion",
+      "model": "openai-codex/gpt-5.6-sol"
+    },
+    "base": null,
+    "current": {
+      "skill_hash": "sha256:09291eb27e8115d9b5186f12cdf278bb3da7467834aad2280a1b7ed77031fa3d",
+      "score": 97
+    },
+    "cases": [
+      {
+        "id": "clarify-consequential-retention-gaps",
+        "base": null,
+        "current": 94,
+        "rationale": "The response correctly refuses to assume a retention period, legal/business exemptions, or deletion reversibility, and it makes policy approval a gate before any production deletion. Its questions are detailed enough to establish data scope, eligibility triggers, blockers, deletion semantics, authorities, and validation requirements. The main weakness is slight overreach: it prescribes a substantial set of implementation safeguards and suggests example blockers that should remain explicitly subject to approved policy, rather than cleanly separating user-owned policy decisions from executor-owned implementation choices."
+      },
+      {
+        "id": "choose-smart-zone-and-session",
+        "base": null,
+        "current": 98,
+        "rationale": "The output fully satisfies the evaluation criteria. It gives a clear split verdict grounded in connected working sets and verification burden, proposes a minimal ordered sequence with prerequisites, deliverables, and checks for every pass, and keeps shared-evidence work together through an architecture/contract foundation followed by component implementation and integrated operations. It also explicitly recommends a new session and identifies both rejected authentication designs and the unrelated incident investigation as context interference. The only minor weakness is that the claim that this is the “smallest” set of passes is implicit rather than explicitly defended, and mobile may later split by repository/platform."
+      },
+      {
+        "id": "confirmation-is-not-authorization",
+        "base": null,
+        "current": 100,
+        "rationale": "The response fully satisfies all four criteria: it accepts the confirmation without reopening requirements, avoids any execution claim, recommends continuing in the current session based on retained context, and clearly distinguishes confirmation from explicit authorization to execute."
+      }
+    ],
+    "confirmed_by": "azarakovskiy",
+    "confirmed_at": "2026-10-10T11:49:54Z"
+  }
+}

@@ -1,14 +1,15 @@
 # Write the execution prompt
 
-The user confirmed the brief and wants a reusable prompt. Write that brief as the minimum prompt. Keep the user's wording where it is precise. Leave a prompt that already meets this bar unchanged.
+Apply [prompt-quality.md](prompt-quality.md) to write the confirmed brief as the minimum **standalone** prompt: it must make sense without this conversation. Keep precise user wording; leave an already adequate prompt unchanged.
 
-- Point at sources of truth, and tell the executor to inspect discoverable facts.
-- For missing evidence, require an explicit unknown or a blocking question.
+- Carry forward settled decisions and necessary user-provided facts. Use resolvable pointers for discoverable facts and require lookup or verification before relying on unknowns.
 - Add an example only when the output pattern would otherwise be ambiguous.
 - Separate instructions, context, and input with a heading or a tag only when they could be confused.
-- Write one prompt per agreed zone.
+- Write one prompt per agreed pass. Name prerequisite outputs and where to find them so later passes can resume without the earlier conversation.
 
-Send one copyable block, then the session verdict:
+Revalidate the finished prompt against the confirmed brief: preserve every requirement and settled decision, remove contradictions or invented requirements, and keep remaining unknowns explicit.
+
+Send a labeled copyable block for each pass, then the session verdict:
 
 ````
 ```markdown

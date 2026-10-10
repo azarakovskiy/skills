@@ -1,0 +1,16 @@
+name: Evaluations
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - run: python3 scripts/evals.py --base "${{ github.event.pull_request.base.sha }}"
