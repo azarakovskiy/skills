@@ -29,5 +29,41 @@
       ]
     }
   ],
-  "comparison": null
+  "comparison": {
+    "suite_hash": "sha256:924f9219825e61fe40268dca4f68f4ba7846fa33f45aa1d53ed3f5276c59a5d9",
+    "environment": {
+      "agent": "OMP completion",
+      "model": "openai-codex/gpt-5.6-sol"
+    },
+    "base": {
+      "skill_hash": "sha256:7a26c7ece922923a854bc1978961d64ba81aa6d8940af39575e468073e1750df",
+      "score": 98
+    },
+    "current": {
+      "skill_hash": "sha256:7a26c7ece922923a854bc1978961d64ba81aa6d8940af39575e468073e1750df",
+      "score": 98
+    },
+    "cases": [
+      {
+        "id": "pass-through-single-unit",
+        "base": 98,
+        "current": 100,
+        "rationale": "Base: Semantically returns the required decision and adds no markers, subtasks, or invented decomposition. The only minor deviation is capitalization and terminal punctuation versus the exact lowercase phrase in the criterion. Current: Exactly returns `implement as-is` and leaves the ticket otherwise untouched, with no Orchestrated marker, Subtasks section, or invented seams/work."
+      },
+      {
+        "id": "split-across-seams-and-entry-points",
+        "base": 96,
+        "current": 94,
+        "rationale": "Base: Strongly satisfies all criteria: it marks the ticket Orchestrated, includes a clear Subtasks section, identifies multiple seams and two independently verifiable entry points, and uses coherent waves (skeleton first; four parallel implementation tasks; integration last). The walking skeleton owns shared value types, freezes distinct CLI/HTTP and seam contracts, and explicitly says its end-to-end verification is wiring-only with behavior still stubbed. Each implementation task has narrow, non-overlapping ownership plus contract, verification, and dependency fields, while the final task depends on all implementation work, removes stubs, and checks the original acceptance. Minor deductions: the split line says “4 seams” even though the decomposition can be read as five areas/seams, and the skeleton’s wording about retrieving status through each entry point is slightly underspecified because the ticket only names submission entry points. Current: Meets the core criteria very well: it is marked Orchestrated, has an explicit split rationale naming multiple seams and two entry points, puts a contract-freezing walking skeleton first, gives small ownership-bounded subtasks with contracts/verifications/dependencies, and ends with integration that removes residual stubs and exercises both restart-survival paths. Its sequential blockers and five waves are internally consistent, though more conservative than necessary. Deductions are for a few contract mismatches/ambiguities: it counts five seams while mixing shared representation with behavioral seams, adds service status retrieval and create/get persistence beyond the ticket’s explicitly listed submission orchestration, and maps “missing” errors in submission-only CLI/HTTP handlers where that error may belong to retrieval. Also, skeleton verification does not explicitly state that checks are not already passing beyond canned/stub wording."
+      },
+      {
+        "id": "refuse-false-boundary",
+        "base": 100,
+        "current": 100,
+        "rationale": "Base: Directly stops and reports decomposition is blocked, identifies the shared atomic decode_stream loop as lacking a substitutable boundary, avoids fabricating subtasks or independent seams, and states that decomposition would require revising the stated constraints. It makes no implementation or verification claims. Current: Explicitly marks decomposition as blocked, explains that both entry points share the same mutable region and atomic state transitions, refuses a fabricated Subtasks plan, and says splitting would require invented boundaries that violate the ticket constraints. It does not claim implementation or verification results."
+      }
+    ],
+    "confirmed_by": "Alexey Zarakovskiy",
+    "confirmed_at": "2026-10-10T20:20:32.919978Z"
+  }
 }
