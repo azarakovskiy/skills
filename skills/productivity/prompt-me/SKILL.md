@@ -54,25 +54,56 @@ Name the material that would interfere or crowd the working context; length alon
 
 ## 4. Confirm
 
-Present the brief with this template. Default to recommending a session. Choose execution only when the user explicitly asks to execute the confirmed brief; describing the task alone is not that authorization. Honor requests for a reusable prompt.
+Present the brief in the grouped layout below. Default to recommending a session. Choose execution only when the user explicitly asks to execute the confirmed brief; describing the task alone is not that authorization. Honor requests for a reusable prompt.
+
+Use short sentences, familiar labels, and consistent technical terms. Write direct, natural prose without filler or inflated language. Use numbered steps for ordered work and bullets for limits and checks. Scale the length to the information needed, not an arbitrary word limit. Omit empty scope groups rather than inventing restrictions to fill them.
 
 ```markdown
 ## Task brief
 
-- **Outcome:** <intended result>
-- **Artifact:** <what will be created or changed>
-- **Done when:** <observable evidence>
-- **Boundaries:** <scope, exclusions, and permissions>
-- **Context:** <source pointers, necessary user-provided facts, and explicit unknowns>
-- **Approach:** <settled decisions and executor free choices>
-- **Verification:** <checks>
-- **Smart zone:** <fits or split, with reason and proposed pass boundaries>
-- **Models:** <category, effort — concise task-grounded reason; group equal needs and separately label Required capabilities only when applicable>
-- **Session:** <here or new, with reason>
-- **Delivery:** <recommend session, execute here, or produce a prompt>
+**Recommendation: <continue here | start a new session>.** <session reason>. <fits one pass or needs a split, with reason and proposed pass boundaries>.
+
+**Models:** <category, effort, and one concise task-grounded reason; group equal needs>
+<Separately label Required capabilities and their reasons only when they constrain model choice.>
+
+### Goal and deliverables
+
+<Intended result and concrete artifacts to create or change.>
+
+### Scope and limits
+
+**What may change**
+- <in-scope work>
+
+**What must stay unchanged**
+- <preserved behavior and exclusions>
+
+**Constraints**
+- <limits on methods, tools, dependencies, evidence, or other task-specific requirements>
+
+**What needs approval**
+- <permissions and decisions requiring explicit agreement>
+
+### Plan and sources
+
+<Source pointers, necessary user-provided facts, and explicit unknowns to resolve before relying on them.>
+
+1. <settled approach and choices left to the executor; for each split pass, include its deliverable, prerequisites, and check>
+
+### Completion and checks
+
+<Observable conditions that mean the work is done.>
+
+- <verification steps and any workflow safeguards to check>
+
+### Next
+
+<Recommend a session, execute here if explicitly authorized, or produce a reusable prompt. State the next action and any authorization still needed.>
 
 **Is this what you want?**
 ```
+
+Before presenting, compare the draft with the clarified request and settled decisions. Preserve every requirement, quantity, condition, permission, source fact, check, and recommendation reason. Keep obligation and uncertainty unchanged: “consider” must not become “must.” Make limits explicit, restore omissions, and remove invented assumptions. Clearer presentation must not reduce the information available to the executor.
 
 Wait for explicit confirmation of the brief and any split boundaries. A correction reopens affected gaps: return to clarification and reassess fit before presenting the revised brief.
 
