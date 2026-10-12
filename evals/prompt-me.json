@@ -72,6 +72,27 @@
         "The response preserves the task and verification scope without inventory questions, automatic model switching, or model-driven extra passes.",
         "The response prepares the brief without executing it or claiming results."
       ]
+    },
+    {
+      "id": "size-subagent-batches-by-working-set",
+      "prompt": "Use prompt-me to prepare a brief for this settled task, not to execute it. Our architecture audit page makes 69 factual claims about four repositories: billing, ledger, notifications, and admin. Each claim names the repository and module it describes. One extra item is open-ended: find every service in those repositories that inserts, updates, or deletes rows in the shared orders table, and list each with its file and operation. The executor checks each claim against its repository's main branch as it stands on the shared remote, and returns a report that marks each claim confirmed, wrong, or unresolved, with evidence for each and a suggested correction for each wrong claim. Editing the audit page is out of scope. The executor may make read-only copies of the repositories but must leave the local clones on their feature branches. Keep it cheap, e.g. send a subagent to verify one or many claims at once. Measured so far: the claim list is about 6K tokens, and each subagent starts with about 20K tokens of system prompt and tool definitions. How much source each claim needs is unknown: some claims are one-line configuration checks, others trace calls across several files. The subagents can read files but cannot run commands. We do not know which model or context window the subagents will get.",
+      "criteria": [
+        "The brief treats cheap as fewer tokens and reruns, not fewer subagents: it sizes batches so each subagent's estimated peak context, including its 20K-token starting baseline, stays within a 75K-token budget, the delegated-pass cap that applies because the subagents' context window is unknown.",
+        "The brief's batching rule gives every claim a named scope, its repository and module, and gives the open-ended orders-table item its own subagent.",
+        "Because the cost per claim is unknown, the brief starts with a pilot batch of one or two claims and sizes the remaining batches from the pilot's measured cost rather than from the number of claims.",
+        "Before the subagents start, a prepare step supplies the main-branch content they cannot obtain themselves, for example by exporting snapshots.",
+        "The subagent instructions say to stay inside each claim's named scope, to mark a claim unresolved and say what is missing when it needs more, then continue, and to return a result with evidence for every claim."
+      ]
+    },
+    {
+      "id": "itemize-pass-estimate-against-budget",
+      "prompt": "Use prompt-me to prepare a brief for this settled task, not to execute it. Rewrite our data-retention audit page from three source documents and publish the result to the same page. While we clarified the task, reading the three sources took this session's context from 30K to 100K tokens. The executor will start with about 25K tokens of system prompt and tool definitions. It must load our documentation-style skill of about 32K characters and write a spec document of about 10K tokens before drafting. It will send the page's 40 claims to five subagents, each returning a report of about 8K tokens, then write the page in about three draft iterations of about 8K tokens each. Its final check re-reads the published page, about 8K tokens. We do not know which model or context window the executor will get. Because the sources are only about 70K tokens, I expect the whole task to fit in one pass; please assess that.",
+      "criteria": [
+        "The response itemizes the execution estimate, counting the harness baseline, the roughly 70K tokens of measured sources, the style skill to load, the spec document, the five subagent reports, the draft iterations, and the final re-read, and totals them as the peak context.",
+        "The response compares that total with a 150K-token budget, the main-pass cap that applies because the executor's context window is unknown, finds one pass over budget, and corrects the expectation that the task fits one pass.",
+        "The response splits the work into sequential passes connected by explicit handoff artifacts, such as the spec document, and gives each pass its own itemized estimate within the 150K budget, a deliverable, and an observable check.",
+        "The response uses the default budget without asking the user for a budget, model, or context window."
+      ]
     }
   ],
   "comparison": null
