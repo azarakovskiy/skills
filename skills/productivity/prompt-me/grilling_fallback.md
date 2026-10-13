@@ -4,7 +4,7 @@ Resolve consequential gaps: unknowns that could change the goal, scope, constrai
 
 ## Fact discovery
 
-Find environment facts yourself, delegating lookups to a scout when available, and retain source pointers with the findings. A pending lookup holds back only the decisions that need its result; continue asking independent questions. Ask the user for information or access only when necessary evidence is inaccessible and actually blocks progress.
+Find environment facts yourself, delegating lookups to a subagent when available, and retain source pointers with the findings. A pending lookup holds back only the decisions that need its result; continue asking independent questions. Ask the user for information or access only when necessary evidence is inaccessible and actually blocks progress.
 
 ## Interview rounds
 

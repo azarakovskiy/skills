@@ -17,7 +17,7 @@ Check the request against [prompt-quality.md](prompt-quality.md). If no conseque
 
 When consequential gaps remain, load and run `grilling`. If unavailable, give the warning and install instruction in [dependencies.md](dependencies.md), then use [grilling_fallback.md](grilling_fallback.md).
 
-Clarify only contradictions and missing user decisions that change the outcome, scope, risk, or verification. Treat a request presented as fully specified or settled as ready unless it contains one of those gaps. Repository paths, source locations, and existing implementation details stay as execution-time lookups when the brief can require their inspection before reliance.
+Clarify only contradictions and missing user decisions that change the outcome, scope, risk, or verification. Treat a request presented as fully specified or settled as ready unless it contains one of those gaps. Repository paths, source locations, the existing component a request describes, and existing implementation details stay as execution-time lookups when the brief can require their inspection before reliance.
 
 **Done when:** every consequential gap is resolved and the brief meets the prompt-quality checklist.
 
@@ -25,14 +25,18 @@ Clarify only contradictions and missing user decisions that change the outcome, 
 
 ### Smart zone
 
-Assess whether the clarified request can be executed and verified in one **smart zone**: a low-load context where the model can reliably track the goal, constraints, evidence, and checks together. Reliability can decline before the advertised context limit; there is no universal token cutoff.
+Assess whether the clarified request can be executed and verified in one **smart zone**: a low-load context where the model can reliably track the goal, constraints, evidence, and checks together. Reliability declines before the advertised context limit, so each pass gets a **budget** for its peak context, harness baseline (system prompt and tool definitions) included: the lower of its cap and 40% of its model's context window, or the cap when that window is unknown. The cap is 150K tokens for the main pass and 75K for each subagent. A budget the user states replaces the default for the passes or model category it names; otherwise apply the default without asking.
 
-- **Fits:** recommend one pass when the outcome, connected working set, and verification loop can stay in that zone.
-- **Does not fit:** recommend splitting at seams that separate context-heavy working sets, with explicit inputs and outputs between passes. Name the material that makes one pass too large and propose the smallest sequence that preserves the whole goal. Each pass must produce a verifiable result; related steps sharing the same evidence stay together.
+Add up the main pass's **itemized estimate**: the baseline, the sizes measured during clarification, the material the executor must load, drafts, expected subagent outputs, and end-of-task checks. Material a subagent reads counts against that subagent's budget.
+
+- **Fits:** recommend one pass when the estimate is within budget, keeping the outcome, its connected working set, and its verification loop together.
+- **Split:** each later pass is a session the user must start by hand, so recommend a split only when the estimate exceeds the budget. Name the items that push it over, then follow [split.md](split.md).
+
+Keep the work in the main pass by default. Plan subagents when the user asks for them or the work is an **orchestration** of many independent items, and follow [orchestration.md](orchestration.md).
 
 ### Models
 
-Recommend model categories, leaving the user to map them to their preconfigured lineup. Keep specific model names, inventories, and mappings out of the advice. Recommendations are advisory; preserve task/session boundaries and leave switching to the user.
+Recommend model categories, leaving the user to map them to their preconfigured lineup. Keep specific model names, inventories, and mappings out of the advice. Recommendations are advisory; preserve task/session boundaries and leave switching to the user, including between steps of one pass.
 
 Use **Lightweight** for bounded routine work or settled execution with straightforward checks; **Standard** for ordinary multi-step judgment; **Frontier** for difficult planning, ambiguity, demanding reasoning, or costly mistakes. Choose effort independently: low for mechanical work, moderate for ordinary judgment, high for demanding reasoning, and maximum only with task-grounded justification. Favor reliable completion over price alone.
 
@@ -40,7 +44,7 @@ Every recommendation includes **category, effort, and one concise task-grounded 
 
 Label a capability **Required** only when it changes which model is viable, with a brief reason; ordinary file/tool access belongs with execution prerequisites. Ground context requirements in the material needed together, not optional retrieval.
 
-**Done when:** the brief says fits or split with a reason; every proposed pass has a deliverable, prerequisites, and check; every model recommendation includes a category, effort, and concise reason; and choice-constraining capabilities are labeled **Required**.
+**Done when:** the brief recommends one pass or a split; a split names the items that push the main pass over budget and lists its passes as split.md describes; a delegating plan carries the orchestration.md rules; every model recommendation includes a category, effort, and concise reason; and choice-constraining capabilities are labeled **Required**.
 
 ## 3. Session assessment
 
@@ -61,7 +65,7 @@ Use short sentences, familiar labels, and consistent technical terms. Write dire
 ```markdown
 ## Task brief
 
-**Recommendation: <continue here | start a new session>.** <session reason>. <fits one pass or needs a split, with reason and proposed pass boundaries>.
+**Recommendation: <continue here | start a new session>.** <session reason>. <fits one pass or needs a split, with the itemized estimate against the budget that decides it (only the verdict for a small, clear task) and proposed pass boundaries>.
 
 **Models:** <category, effort, and one concise task-grounded reason; group equal needs>
 <Separately label Required capabilities and their reasons only when they constrain model choice.>
@@ -88,7 +92,7 @@ Use short sentences, familiar labels, and consistent technical terms. Write dire
 
 <Source pointers, necessary user-provided facts, and explicit unknowns to resolve before relying on them.>
 
-1. <settled approach and choices left to the executor; for each split pass, include its deliverable, prerequisites, and check>
+1. <settled approach and choices left to the executor; for a split, each pass with its split.md fields; for delegated work, the subagent budget and batching rule>
 
 ### Completion and checks
 
@@ -111,7 +115,7 @@ Wait for explicit confirmation of the brief and any split boundaries. A correcti
 
 ## 5. Deliver
 
-After confirmation, state the session recommendation:
+After confirmation, state a concrete session recommendation and its reason, applying step 3 to this session as it stands:
 
 - **Here:** recommend continuing here. Execute only if the user also explicitly authorized execution; confirming the brief alone is not authorization.
 - **New session, or reusable prompt requested:** load `writing-for-agents`, then follow [write.md](write.md). If unavailable, give the warning and install instruction in [dependencies.md](dependencies.md) and use [writing_for_agents_fallback.md](writing_for_agents_fallback.md) before writing.
