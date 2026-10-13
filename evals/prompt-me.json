@@ -2,96 +2,84 @@
   "skill": "prompt-me",
   "cases": [
     {
-      "id": "clarify-consequential-retention-gaps",
-      "prompt": "Use prompt-me to turn this request into an executable task brief: Automatically delete old customer records from production. We have not decided how old records must be, which records must be retained for legal or business reasons, or whether deletion must be reversible.",
+      "id": "catch-unstated-gaps",
+      "prompt": "Use prompt-me on this request: automatically delete old customer records from production.",
       "criteria": [
-        "The response does not invent a retention period, exemption policy, or reversibility requirement.",
-        "The response asks the user to resolve the missing choices that could materially change the outcome, scope, risk, or acceptance criteria before treating the brief as confirmed.",
+        "Although the request does not flag them, the response asks the user to decide what makes a record old, which records must be kept for legal or business reasons, and whether deletion must be reversible, before presenting a brief.",
+        "The response treats none of these as decided: any value it proposes is a recommendation awaiting the user's answer.",
         "The questions are specific enough for the user's answers to determine what may be deleted and what protections or verification the task requires.",
-        "The response avoids burdening the user with safe implementation choices that an executor can make later."
+        "Every question and recommended answer names an outcome or limit, such as what may be deleted, what must be kept, how long deletion stays recoverable, or when a run must stop; how those are delivered, such as soft deletes, archive tables, pre-run backups, kill switches, or alerting setup, is left to the executor."
       ]
     },
     {
-      "id": "choose-smart-zone-and-session",
-      "prompt": "Use prompt-me to assess this fully specified request: replace password authentication with passkeys across the database, API, web app, and mobile apps; preserve account recovery; migrate existing users; stage the rollout; update operator documentation; and verify each client plus rollback. This thread also contains several rejected authentication designs and a long unrelated incident investigation. Decide whether execution fits one smart zone and whether it should continue in this session or a new one.",
+      "id": "split-by-outcome-and-route",
+      "prompt": "Use prompt-me on this fully specified request: replace password authentication with passkeys across the database, API, web app, and mobile apps; preserve account recovery; migrate existing users; stage the rollout; update operator documentation; and verify each client plus rollback. This thread also contains several rejected authentication designs and a long unrelated incident investigation.",
       "criteria": [
-        "The response gives an explicit fits-or-split verdict and explains which connected working sets and verification demands determine it.",
-        "If splitting, the response proposes the smallest ordered set of passes that preserves the whole requested outcome, with a deliverable, prerequisites, and an observable check for every pass.",
-        "The response keeps work that depends on the same evidence together rather than producing arbitrary size-based chunks.",
-        "The response explicitly recommends this session or a new session and names the rejected designs and unrelated investigation as relevant context interference rather than relying on conversation length alone."
+        "The brief's fit verdict is a single line that splits the work, with a reason grounded in what must be loaded and verified together and no token estimates or budget arithmetic.",
+        "Each part is named by its outcome and is a complete, checkable result; a part that needs an earlier part's output names that output and runs after it.",
+        "The brief recommends writing the prompts rather than running here and names the rejected designs or the unrelated investigation as the interference.",
+        "The brief contains no plan or implementation steps beyond the list of parts and does not reopen the settled requirements.",
+        "The response stops at the brief: it neither executes the work nor writes the prompts before the user replies."
       ]
     },
     {
-      "id": "confirmation-is-not-authorization",
-      "prompt": "Continue a prompt-me workflow from this state. Your previous message presented a complete brief to add per-account API rate limiting, return HTTP 429 when the limit is exceeded, document the limit, and verify allowed and rejected requests. My reply is: ‘Yes, that brief is correct.’ I have not asked you to execute the work.",
+      "id": "plain-yes-takes-recommended-route",
+      "prompt": "Continue a prompt-me workflow from this state. Your previous message presented a brief to add per-account API rate limiting of 100 requests per minute, return HTTP 429 when the limit is exceeded, document the limit, and verify allowed and rejected requests. It ended with 'Next: Write the prompt (recommended), or Run it here', and the recommendation cited rejected designs earlier in this thread. My reply is: 'Yes, that's correct.'",
       "criteria": [
-        "The response treats the user's reply as confirmation of the current brief without reopening already settled requirements.",
-        "The response does not implement the task, claim that implementation started, or claim that any requested result was produced.",
-        "The response states a concrete recommendation to continue here or use a new session, with a reason tied to the available context.",
-        "The response makes clear that execution requires separate explicit authorization and offers the appropriate next step without treating confirmation itself as permission."
+        "The response treats the reply as confirming the brief and choosing the recommended route, and writes a standalone, copyable execution prompt without asking which route to take.",
+        "The prompt carries the limit of 100 requests per minute per account word for word, along with the HTTP 429 response, the documentation, and the allowed and rejected request checks.",
+        "The prompt leaves technical choices such as the limiting algorithm, storage, and code layout to the executor.",
+        "The response does not implement the task or claim that any result was produced."
       ]
     },
     {
-      "id": "right-size-approved-plan-execution",
-      "prompt": "Use prompt-me to prepare a brief for executing this already approved detailed plan, not to execute it now. In a small static site, change only the three button labels 'Send' to 'Submit' in contact.html, support.html, and feedback.html; leave attributes, handlers, layout, and other text unchanged. Verify the three rendered labels and that each form still submits through its existing handler. The files and existing form smoke checks are available to the executor; there are no unresolved design choices. I assume we need the strongest available model at maximum reasoning effort for reliable quality, but please assess whether that is actually warranted.",
+      "id": "small-clear-task-runs-here",
+      "prompt": "Use prompt-me on this already approved plan. In a small static site, change only the three button labels 'Send' to 'Submit' in contact.html, support.html, and feedback.html; leave attributes, handlers, layout, and other text unchanged. Verify the three rendered labels and that each form still submits through its existing handler. The files and existing form smoke checks are available to the executor; there are no unresolved design choices. I assume we need the strongest available model at maximum reasoning effort for reliable quality, but please assess whether that is actually warranted.",
       "criteria": [
-        "The brief gives one short task-level recommendation with the Lightweight category, an explicit effort level, and a concise task-grounded reason, without asking for a model inventory or named-model mapping.",
-        "The response directly answers the user's maximum-effort question: a simpler capable executor and less than maximum effort suffice for the approved mechanical plan and straightforward checks, without pursuing cheapness over reliability.",
-        "The recommendation remains advisory and compact, without an unnecessary headroom or capability breakdown.",
-        "The response preserves the approved scope and checks without reopening settled decisions, adding model-driven task or session boundaries, switching models, or executing the task."
+        "The response presents the brief without clarifying questions and without reopening the approved scope or checks.",
+        "The model line nudges toward a cheap model class on low effort with a task-grounded reason, directly answering that the strongest model at maximum effort is not warranted.",
+        "The model advice is relative and short: a class and a relative effort, with no named models, exact effort settings, or capability breakdown.",
+        "The brief recommends running here because the task is small, clear, and fits one pass, and the response waits for the user's reply instead of executing."
       ]
     },
     {
       "id": "differentiate-planning-and-mechanical-execution",
       "prompt": "Use prompt-me to prepare a brief for this fully specified documentation task, not to execute it now. We have two agreed steps for one small retry-protocol specification. First, derive and check a state-transition table for a worker that may crash before or after sending a request or recording its response: retries reuse a stable operation ID, the server atomically deduplicates that ID with its side effect, duplicate responses return the stored result, and a timeout cannot be treated as proof that the side effect did not happen. Show why each crash point preserves at-most-once side effects and eventual completion once the worker and server recover. Second, after the table is checked, copy its rows into three existing documentation templates using their fixed column mapping; a deterministic checker compares every copied cell with the source table. All policies, templates, mappings, and checks are settled, the executor receives them together, and deployment or production changes are out of scope. Recommend how to staff these two steps for reliable quality; do not perform either step.",
       "criteria": [
-        "The model advice briefly assigns the Frontier category to crash-state analysis and the Lightweight category to copying the checked table, with an explicit effort recommendation for each.",
-        "The distinction is grounded in reasoning through failure interleavings versus a checked source, fixed mapping, and deterministic verification, without displaying a full model-selection worksheet.",
-        "Recommendations remain advisory; effort is chosen for the work rather than automatically pairing maximum effort with the stronger model, and routine headroom details stay out of the advice.",
-        "The response preserves both deliverables and the dependency on a checked table, groups work around its shared evidence, and does not introduce extra passes or fresh sessions solely to vary models.",
-        "The response does not replace the requested brief with protocol execution, model catalogs, automatic model switching, or questions reopening settled policies."
+        "The model advice nudges the crash-state analysis toward a frontier model on high effort and the table copying toward a cheap model on low effort.",
+        "Each nudge has a short reason grounded in the work: reasoning through failure interleavings versus copying a checked table through a fixed mapping with deterministic verification.",
+        "The brief preserves both deliverables and the dependency of the copying on a checked table, and does not add parts or sessions solely to vary models.",
+        "The response does not perform either step and does not reopen settled policies."
       ]
     },
     {
-      "id": "carry-required-and-recommended-into-handoff",
-      "prompt": "Continue prompt-me from a confirmed brief and produce the reusable execution prompt for a fresh session; do not execute the task here. Confirmed goal: compare the before.png and after.png dashboard screenshots that will be attached in that session, and report changed chart colors, overlapping labels, and clipped legends with screenshot locations. The task requires direct visual inspection because these differences are not available in text, OCR, source files, or alternative tool output. Use only those two images as evidence, report uncertainty rather than inventing measurements, and verify every reported difference against both images. The brief is approved, all decisions are settled, and the fresh session was chosen because this thread contains rejected drafts. Assess the model class and reasoning effort for reliable execution and carry that guidance into the copyable prompt. An optional searchable archive of old dashboards exists, but it is not needed for this comparison.",
+      "id": "write-standalone-prompt-per-part",
+      "prompt": "Continue prompt-me from a confirmed brief; I chose 'Write the prompts'. The confirmed brief:\n\nGoal: move our product documentation from the old wiki export in `wiki-export/` to the new docs site in `site/docs/`, so every live wiki page has a matching site page.\nDecisions: skip pages marked 'archived'; keep each page's title and slug; leave the old wiki untouched.\nDone when: every non-archived wiki page has a site page with the same title and slug, and the site builds.\nFit: Split into 2 parts — the export has about 400 pages, too many to inventory and rewrite in one pass.\n- Inventory — done when `migration/inventory.md` lists every non-archived page with its slug and target section; runs first.\n- Migration — done when every page in `migration/inventory.md` exists on the site with its title and slug, and the site builds; needs `migration/inventory.md`.\nModel: inventory — a cheap model on low effort, because it is mechanical listing; migration — a standard model on moderate effort, because each page needs rewriting into the new format.",
       "criteria": [
-        "The response supplies a self-contained copyable execution prompt preserving the confirmed goal, two-image inputs, evidence limits, uncertainty handling, and verification, without claiming to inspect unavailable images or execute the task.",
-        "Inside the copyable prompt, direct image-understanding capability is separately labeled Required with the task-grounded reason that visual differences cannot be recovered from the available textual alternatives.",
-        "Inside the copyable prompt, the advisory recommendation includes a category, independently chosen effort, and concise task-grounded reason, without an unsolicited headroom breakdown or hard model-tier prerequisite.",
-        "The response bases any context-capacity discussion on the two images and instructions needed together; it does not invent a numeric context minimum or require the optional searchable archive to fit in the context window.",
-        "The response respects the confirmed brief and fresh-session handoff without reopening settled choices, adding model-driven passes, or treating recommendations as authorization to switch models."
+        "The response supplies two copyable prompts, one per part, each runnable in a fresh session without this conversation, and executes neither part.",
+        "The inventory prompt produces `migration/inventory.md`, and the migration prompt names that file as the input it needs from the inventory part.",
+        "Each prompt carries its own part's model suggestion as a relative class and effort with its reason.",
+        "Each settled decision appears in every prompt it bears on: archived pages skipped, titles and slugs kept, and the old wiki left untouched.",
+        "Every open choice is the executor's: neither prompt tells it to ask the user, wait for a human, or return for approval, and neither adds requirements beyond the confirmed brief."
       ]
     },
     {
-      "id": "use-familiar-lineup-concisely",
-      "prompt": "Use prompt-me to prepare a brief, not execute it. My configured lineup is DeepSeek for bounded repository scouting, Luna for settled mechanical edits, Sol as my usual default, and Astra for difficult design. Add cursor pagination to an existing authenticated read-only endpoint using this repository's established pagination conventions. Preserve existing authorization and response fields; return at most 100 records in stable created_at/id order; reject malformed cursors; verify ordering, page boundaries, empty results, and existing access restrictions. Product decisions are settled; inspect the existing endpoint and pagination conventions before editing. I use this lineup every day and want only the practical model recommendation, not a model comparison.",
+      "id": "no-invented-implementation",
+      "prompt": "Use prompt-me on this request: in our Go web service, add an audit log so admins can see who changed account settings. I have not decided whether reads are logged as well as changes, how long entries are kept, or who besides admins may view the log.",
       "criteria": [
-        "The brief uses an appropriate Lightweight, Standard, or Frontier category for the relevant work rather than named models, a mapping, or a catalog of configured names.",
-        "Model advice is one short line containing the category, an effort recommendation, and a concise task-grounded reason, without extra headroom, capability, or rationale subsections.",
-        "The response preserves the task and verification scope without inventory questions, automatic model switching, or model-driven extra passes.",
-        "The response prepares the brief without executing it or claiming results."
+        "The response asks the user to decide whether reads are logged, how long entries are kept, and who may view the log, and treats none of them as decided.",
+        "The response does not ask the user about technical choices such as storage, tables, packages, files, API design, or data schemas.",
+        "The response waits for the answers instead of presenting the brief as confirmed or executing."
       ]
     },
     {
-      "id": "size-subagent-batches-by-working-set",
-      "prompt": "Use prompt-me to prepare a brief for this settled task, not to execute it. Our architecture audit page makes 69 factual claims about four repositories: billing, ledger, notifications, and admin. Each claim names the repository and module it describes. One extra item is open-ended: find every service in those repositories that inserts, updates, or deletes rows in the shared orders table, and list each with its file and operation. The executor checks each claim against its repository's main branch as it stands on the shared remote, and returns a report that marks each claim confirmed, wrong, or unresolved, with evidence for each and a suggested correction for each wrong claim. Editing the audit page is out of scope. The executor may make read-only copies of the repositories but must leave the local clones on their feature branches. Keep it cheap, e.g. send a subagent to verify one or many claims at once. Measured so far: the claim list is about 6K tokens, and each subagent starts with about 20K tokens of system prompt and tool definitions. How much source each claim needs is unknown: some claims are one-line configuration checks, others trace calls across several files. The subagents can read files but cannot run commands. We do not know which model or context window the subagents will get.",
+      "id": "short-brief-with-status-quo",
+      "prompt": "Use prompt-me on this settled request: our CLI prints errors as plain text to stdout, and two downstream scripts parse that output. Switch errors to JSON on stderr, update both downstream scripts in the same change so they keep working, and leave success output unchanged. All decisions are settled.",
       "criteria": [
-        "The brief treats cheap as fewer tokens and reruns, not fewer subagents: it sizes batches so each subagent's estimated peak context, including its 20K-token starting baseline, stays within a 75K-token budget, the delegated-pass cap that applies because the subagents' context window is unknown.",
-        "The brief's batching rule gives every claim a named scope, its repository and module, and gives the open-ended orders-table item its own subagent.",
-        "Because the cost per claim is unknown, the brief starts with a pilot batch of one or two claims and sizes the remaining batches from the pilot's measured cost rather than from the number of claims.",
-        "Before the subagents start, a prepare step supplies the main-branch content they cannot obtain themselves, for example by exporting snapshots.",
-        "The subagent instructions say to stay inside each claim's named scope, to mark a claim unresolved and say what is missing when it needs more, then continue, and to return a result with evidence for every claim."
-      ]
-    },
-    {
-      "id": "itemize-pass-estimate-against-budget",
-      "prompt": "Use prompt-me to prepare a brief for this settled task, not to execute it. Rewrite our data-retention audit page from three source documents and publish the result to the same page. While we clarified the task, reading the three sources took this session's context from 30K to 100K tokens. The executor will start with about 25K tokens of system prompt and tool definitions. It must load our documentation-style skill of about 32K characters and write a spec document of about 10K tokens before drafting. It will send the page's 40 claims to five subagents, each returning a report of about 8K tokens, then write the page in about three draft iterations of about 8K tokens each. Its final check re-reads the published page, about 8K tokens. We do not know which model or context window the executor will get. Because the sources are only about 70K tokens, I expect the whole task to fit in one pass; please assess that.",
-      "criteria": [
-        "The response itemizes the execution estimate, counting the harness baseline, the roughly 70K tokens of measured sources, the style skill to load, the spec document, the five subagent reports, the draft iterations, and the final re-read, and totals them as the peak context.",
-        "The response compares that total with a 150K-token budget, the main-pass cap that applies because the executor's context window is unknown, finds one pass over budget, and corrects the expectation that the task fits one pass.",
-        "The response splits the work into sequential passes connected by explicit handoff artifacts, such as the spec document, and gives each pass its own itemized estimate within the 150K budget, a deliverable, and an observable check.",
-        "The response uses the default budget without asking the user for a budget, model, or context window."
+        "The response presents the brief without clarifying questions.",
+        "The brief states the status quo: errors currently go to stdout as plain text and two downstream scripts parse them.",
+        "The brief fits one screen and covers the goal, the settled decisions, done-when conditions, a one-line fit verdict, and a model nudge, with no plan, implementation steps, or prescribed JSON fields.",
+        "The brief ends with a recommended route, and the response waits for the user's reply instead of executing."
       ]
     }
   ],
