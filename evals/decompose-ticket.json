@@ -4,7 +4,9 @@
     {
       "id": "pass-through-single-unit",
       "prompt": "Apply decompose-ticket to this ticket.\n\n# Add --compact to the inspect command\n\nOutcome: running `tool inspect --compact PATH` prints the same inspection data as `tool inspect PATH`, rendered on one line.\n\nThe change is confined to the `inspect` command in `src/commands/inspect.py`; the flag and compact rendering are exercised together by one CLI check. No other command or module changes.",
-      "criteria": [
+      "tests": "Passes a ticket with one seam, one entry point and one check through unchanged.",
+      "traps": [],
+      "expectations": [
         "Returns `implement as-is`; the ticket has one seam, one entry point, and one check, so no split is warranted.",
         "Leaves the ticket unmarked and does not add an Orchestrated marker or Subtasks section.",
         "Does not invent additional seams, entry points, or work merely to force a decomposition."
@@ -13,7 +15,11 @@
     {
       "id": "split-across-seams-and-entry-points",
       "prompt": "Apply decompose-ticket to this ticket.\n\n# Persist export jobs submitted from CLI and HTTP\n\nOutcome: a user can submit an export with either `tool export SOURCE` or `POST /exports`, receive a job ID, restart the process, and retrieve the same job status.\n\nTouched areas:\n- `src/export/types.py`: request and status values shared by both entry points\n- `src/export/service.py`: submission orchestration\n- `src/export/store.py`: durable job persistence\n- `src/cli.py`: `tool export SOURCE` entry point\n- `src/http.py`: `POST /exports` entry point\n- focused checks beside each area\n\nAcceptance: CLI and HTTP submissions obey their documented input/error contracts, persisted status survives restart, and one end-to-end check submits then retrieves a job through each entry point.",
-      "criteria": [
+      "tests": "Splits a ticket with several seams and two entry points into a walking skeleton, one subtask per seam or entry point, and an integration task.",
+      "traps": [
+        "States no blockers or order; the waves must follow from the plan's own Blocked by edges."
+      ],
+      "expectations": [
         "Returns the ticket marked Orchestrated with a Subtasks section whose Split because line identifies the multiple seams and two independently verifiable entry points, and whose waves agree with the stated blockers.",
         "Places a walking skeleton first that owns the shared value types, freezes distinct CLI and HTTP contracts, and specifies an end-to-end path through stubbed orchestration and persistence without claiming the checks already passed.",
         "Assigns each real seam or entry point to a small subtask with non-overlapping ownership, contract, verification, and dependency fields, then places an integration task last that depends on all implementation work, removes every stub, and checks the original acceptance criteria."
@@ -22,48 +28,15 @@
     {
       "id": "refuse-false-boundary",
       "prompt": "Apply decompose-ticket to this ticket.\n\n# Correct verified decoding in the legacy stream loop\n\nOutcome: both `tool decode FILE` and `tool decode --verify FILE` emit bytes in source order, and verify mode rejects a checksum mismatch without emitting the corrupt final block.\n\nBoth entry points enter the same `decode_stream` loop in `src/decoder.py`. Byte emission, cursor advancement, and checksum state are interleaved in that loop and must commit atomically. The ticket may not introduce another interface, buffer a second copy, or split the mutable state; no internal operation can be stubbed or substituted while preserving the required ordering. Both checks necessarily exercise the same lines and state transitions.",
-      "criteria": [
+      "tests": "Refuses to invent seams when two entry points share one atomic loop with no substitutable boundary.",
+      "traps": [
+        "Has two entry points, which alone would trigger a split under the skill's rules."
+      ],
+      "expectations": [
         "Stops and reports that an honest decomposition is blocked because the shared atomic stream loop exposes no substitutable boundary for the two entry points.",
         "Does not append a fabricated Subtasks plan or disguise phases, line ranges, tests, or mutable-state operations as independent seams.",
         "Explains that splitting would require changing the ticket's stated design constraints, without claiming implementation or verification results."
       ]
     }
-  ],
-  "comparison": {
-    "suite_hash": "sha256:924f9219825e61fe40268dca4f68f4ba7846fa33f45aa1d53ed3f5276c59a5d9",
-    "environment": {
-      "agent": "OMP completion",
-      "model": "openai-codex/gpt-5.6-sol"
-    },
-    "base": {
-      "skill_hash": "sha256:7a26c7ece922923a854bc1978961d64ba81aa6d8940af39575e468073e1750df",
-      "score": 98
-    },
-    "current": {
-      "skill_hash": "sha256:7a26c7ece922923a854bc1978961d64ba81aa6d8940af39575e468073e1750df",
-      "score": 98
-    },
-    "cases": [
-      {
-        "id": "pass-through-single-unit",
-        "base": 98,
-        "current": 100,
-        "rationale": "Base: Semantically returns the required decision and adds no markers, subtasks, or invented decomposition. The only minor deviation is capitalization and terminal punctuation versus the exact lowercase phrase in the criterion. Current: Exactly returns `implement as-is` and leaves the ticket otherwise untouched, with no Orchestrated marker, Subtasks section, or invented seams/work."
-      },
-      {
-        "id": "split-across-seams-and-entry-points",
-        "base": 96,
-        "current": 94,
-        "rationale": "Base: Strongly satisfies all criteria: it marks the ticket Orchestrated, includes a clear Subtasks section, identifies multiple seams and two independently verifiable entry points, and uses coherent waves (skeleton first; four parallel implementation tasks; integration last). The walking skeleton owns shared value types, freezes distinct CLI/HTTP and seam contracts, and explicitly says its end-to-end verification is wiring-only with behavior still stubbed. Each implementation task has narrow, non-overlapping ownership plus contract, verification, and dependency fields, while the final task depends on all implementation work, removes stubs, and checks the original acceptance. Minor deductions: the split line says “4 seams” even though the decomposition can be read as five areas/seams, and the skeleton’s wording about retrieving status through each entry point is slightly underspecified because the ticket only names submission entry points. Current: Meets the core criteria very well: it is marked Orchestrated, has an explicit split rationale naming multiple seams and two entry points, puts a contract-freezing walking skeleton first, gives small ownership-bounded subtasks with contracts/verifications/dependencies, and ends with integration that removes residual stubs and exercises both restart-survival paths. Its sequential blockers and five waves are internally consistent, though more conservative than necessary. Deductions are for a few contract mismatches/ambiguities: it counts five seams while mixing shared representation with behavioral seams, adds service status retrieval and create/get persistence beyond the ticket’s explicitly listed submission orchestration, and maps “missing” errors in submission-only CLI/HTTP handlers where that error may belong to retrieval. Also, skeleton verification does not explicitly state that checks are not already passing beyond canned/stub wording."
-      },
-      {
-        "id": "refuse-false-boundary",
-        "base": 100,
-        "current": 100,
-        "rationale": "Base: Directly stops and reports decomposition is blocked, identifies the shared atomic decode_stream loop as lacking a substitutable boundary, avoids fabricating subtasks or independent seams, and states that decomposition would require revising the stated constraints. It makes no implementation or verification claims. Current: Explicitly marks decomposition as blocked, explains that both entry points share the same mutable region and atomic state transitions, refuses a fabricated Subtasks plan, and says splitting would require invented boundaries that violate the ticket constraints. It does not claim implementation or verification results."
-      }
-    ],
-    "confirmed_by": "Alexey Zarakovskiy",
-    "confirmed_at": "2026-10-10T20:20:32.919978Z"
-  }
+  ]
 }

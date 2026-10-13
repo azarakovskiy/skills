@@ -1,95 +1,104 @@
 #!/usr/bin/env python3
-"""Validate skill evaluations and print their score deltas as Markdown."""
+"""Check skill evals before a commit.
+
+Usage: scripts/evals.py [SKILL ...]
+
+After the structure checks, checks each skill whose folder or eval file is staged, or
+each named skill. Only a skill whose folder is staged (or named) and differs from master
+gets model runs: every staged case is answered once by its master version and once by
+its staged version on this machine's default omp model, and an LLM judge marks each
+expectation. Blocks (exits 1) on a structure error, a failed run or judgment, a lower
+staged score, or a case prompt or expectation that was added, changed or removed,
+including by removing a skill.
+"""
 
 from __future__ import annotations
 
 import argparse
-import hashlib
+import io
 import json
 import os
 import re
-import subprocess
+import shutil
 import stat
-from dataclasses import dataclass
+import subprocess
+import sys
+import tarfile
+import tempfile
+from concurrent.futures import Future, ThreadPoolExecutor
+from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
-HASH_RE = re.compile(r"sha256:[0-9a-f]{64}\Z")
+MASTER_REF = "master"
 FRONTMATTER_KEYS = ("name", "description")
-ROOT_KEYS = ("skill", "cases", "comparison")
-CASE_KEYS = ("id", "prompt", "criteria")
-COMPARISON_KEYS = (
-    "suite_hash",
-    "environment",
-    "base",
-    "current",
-    "cases",
-    "confirmed_by",
-    "confirmed_at",
+ROOT_KEYS = ("skill", "cases")
+CASE_KEYS = ("id", "prompt", "tests", "traps", "expectations")
+CONCURRENCY = 8
+TIMEOUT = 1200  # seconds per omp session
+
+# Keeps memory, context files, MCP servers and user/project config sources out of runs,
+# and stops omp from silently retrying on another model.
+OMP_OVERLAY = """\
+memory:
+  backend: "off"
+retry:
+  modelFallback: false
+disabledProviders: [native, claude, codex, gemini, opencode, github, agents, agents-md, claude-md, custom-context]
+"""
+OMP_FLAGS = (
+    "-p", "--mode", "json", "--no-session", "--no-skills", "--no-rules",
+    "--no-extensions", "--no-lsp", "--no-title",
 )
-COMPARISON_CASE_KEYS = ("id", "base", "current", "rationale")
+# The last sentence stops sessions that look up the user's files from answering for an empty project.
+RUN_SYSTEM = (
+    "Your working directory is a copy of the `{name}` skill. Read SKILL.md first and "
+    "follow it to handle the user's request, reading the companion files it points to. "
+    "Read only files inside the working directory. It holds only the skill: answer as you "
+    "would in the user's own session, where the project, files and earlier conversation "
+    "the request mentions exist as described."
+)
+JUDGE_PROMPT = """\
+Grade the answer below against each numbered expectation. An expectation passes only \
+when the answer observably meets it.
+
+Reply with only a JSON array holding one object per expectation, in order: \
+{"n": <expectation number>, "pass": true or false, "reason": "<one line>"}.
+
+<request>
+%s
+</request>
+
+<expectations>
+%s
+</expectations>
+
+<answer>
+%s
+</answer>
+"""
+
+
+class CheckError(Exception):
+    """A run, judgment or git step that failed."""
+
+
+# runner(prompt, cwd, system, tools, log) -> (final answer text, model label)
+Runner = Callable[[str, Path, "str | None", bool, Path], "tuple[str, str]"]
+Case = dict[str, Any]  # one entry of an eval file's "cases"
 
 
 @dataclass(frozen=True)
 class Skill:
+    """One version of a skill. A version the skill is missing from has no files or cases."""
+
     name: str
-    path: Path
+    folder: str  # repository-relative, e.g. skills/productivity/zoom-out
     files: tuple[tuple[bytes, bytes], ...]
-
-    @property
-    def hash(self) -> str:
-        return skill_hash(self.files)
+    cases: tuple[Case, ...] = ()
 
 
-@dataclass
-class AuditResult:
-    rows: list[tuple[str, str]]
-    warnings: list[str]
-    errors: list[str]
-    base_available: bool = True
-
-
-def _digest(content: bytes) -> str:
-    return "sha256:" + hashlib.sha256(content).hexdigest()
-
-
-def skill_hash(files: list[tuple[str | bytes, bytes]] | tuple[tuple[bytes, bytes], ...]) -> str:
-    framed: dict[bytes, bytes] = {}
-    for relative_path, content in files:
-        path = (
-            relative_path
-            if isinstance(relative_path, bytes)
-            else relative_path.encode("utf-8", "surrogateescape")
-        )
-        if path in framed:
-            raise ValueError(f"duplicate package path {path!r}")
-        framed[path] = content
-
-    digest = hashlib.sha256()
-    for path in sorted(framed):
-        content = framed[path]
-        digest.update(len(path).to_bytes(8, "big"))
-        digest.update(path)
-        digest.update(len(content).to_bytes(8, "big"))
-        digest.update(content)
-    return "sha256:" + digest.hexdigest()
-
-
-def canonical_cases_hash(cases: list[Any]) -> str:
-    payload = json.dumps(
-        cases, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-    ).encode("utf-8")
-    return _digest(payload)
-
-
-def find_repo_root(start: Path | None = None) -> Path:
-    current = (start or Path(__file__)).resolve()
-    if current.is_file():
-        current = current.parent
-    for candidate in (current, *current.parents):
-        if (candidate / "README.md").is_file() and (candidate / "skills").is_dir():
-            return candidate
-    raise RuntimeError("could not locate a repository root containing README.md and skills/")
+# ---------------------------------------------------------------- structure checks
 
 
 def _label(root: Path, path: Path) -> str:
@@ -199,15 +208,14 @@ def _package_files(
     return tuple(sorted(files, key=lambda item: item[0]))
 
 
-def _load_skills(root: Path, errors: list[str]) -> list[Skill]:
+def _load_skills(root: Path, errors: list[str]) -> dict[str, Skill]:
     directory = root / "skills"
     paths = sorted(directory.rglob("SKILL.md")) if directory.is_dir() else []
     if not paths:
         errors.append("skills/: no installable SKILL.md files found")
-        return []
+        return {}
 
-    skills: list[Skill] = []
-    seen: dict[str, Path] = {}
+    skills: dict[str, Skill] = {}
     for path in paths:
         label = _label(root, path)
         files = _package_files(path.parent, root, errors)
@@ -221,14 +229,13 @@ def _load_skills(root: Path, errors: list[str]) -> list[Skill]:
         if metadata is None:
             continue
         name = metadata["name"]
-        if name in seen:
+        if name in skills:
             errors.append(
                 f"{label}: duplicate skill name {name!r}; first declared by "
-                f"{_label(root, seen[name])}"
+                f"{skills[name].folder}/SKILL.md"
             )
             continue
-        seen[name] = path
-        skills.append(Skill(name, path, files))
+        skills[name] = Skill(name, _label(root, path.parent), files)
     return skills
 
 
@@ -294,187 +301,45 @@ def _text(value: Any, label: str, errors: list[str]) -> bool:
     return True
 
 
-def _hash(value: Any, label: str, errors: list[str]) -> bool:
-    if not isinstance(value, str) or HASH_RE.fullmatch(value) is None:
-        errors.append(f"{label}: must be 'sha256:' followed by 64 lowercase hex digits")
-        return False
-    return True
+def _texts(value: Any, label: str, errors: list[str], *, nonempty: bool) -> None:
+    if not isinstance(value, list) or (nonempty and not value):
+        errors.append(f"{label}: must be {'a nonempty' if nonempty else 'an'} array")
+        return
+    for index, item in enumerate(value):
+        _text(item, f"{label}[{index}]", errors)
 
 
-def _score(value: Any, label: str, errors: list[str]) -> bool:
-    if type(value) is not int or not 0 <= value <= 100:
-        errors.append(f"{label}: must be an integer from 0 to 100")
-        return False
-    return True
-
-
-def _validate_cases(value: Any, label: str, errors: list[str]) -> tuple[list[str], bool]:
-    start = len(errors)
+def _validate_cases(value: Any, label: str, errors: list[str]) -> None:
     if not isinstance(value, list) or not value:
         errors.append(f"{label}: must be a nonempty array")
-        return [], False
-
-    ids: list[str] = []
+        return
     seen: set[str] = set()
     for index, case in enumerate(value):
         case_label = f"{label}[{index}]"
-        if not _keys(case, CASE_KEYS, case_label, errors):
-            if not isinstance(case, dict):
-                continue
+        if not _keys(case, CASE_KEYS, case_label, errors) and not isinstance(case, dict):
+            continue
         case_id = case.get("id")
         if _text(case_id, f"{case_label}.id", errors):
             if case_id in seen:
                 errors.append(f"{case_label}.id: duplicate case id {case_id!r}")
-            else:
-                seen.add(case_id)
-                ids.append(case_id)
+            seen.add(case_id)
         _text(case.get("prompt"), f"{case_label}.prompt", errors)
-        criteria = case.get("criteria")
-        if not isinstance(criteria, list) or not criteria:
-            errors.append(f"{case_label}.criteria: must be a nonempty array")
-        else:
-            for criterion_index, criterion in enumerate(criteria):
-                _text(
-                    criterion,
-                    f"{case_label}.criteria[{criterion_index}]",
-                    errors,
-                )
-    return ids, len(errors) == start
-
-
-def _score_record(
-    value: Any, label: str, errors: list[str]
-) -> tuple[str | None, int | None]:
-    if not _keys(value, ("skill_hash", "score"), label, errors):
-        if not isinstance(value, dict):
-            return None, None
-    hash_value = value.get("skill_hash")
-    score_value = value.get("score")
-    return (
-        hash_value if _hash(hash_value, f"{label}.skill_hash", errors) else None,
-        score_value if _score(score_value, f"{label}.score", errors) else None,
-    )
-
-
-def _validate_comparison(
-    value: Any,
-    suite_ids: list[str],
-    suite_valid: bool,
-    label: str,
-    errors: list[str],
-) -> bool:
-    start = len(errors)
-    if not _keys(value, COMPARISON_KEYS, label, errors):
-        if not isinstance(value, dict):
-            return False
-
-    _hash(value.get("suite_hash"), f"{label}.suite_hash", errors)
-    environment = value.get("environment")
-    if _keys(environment, ("agent", "model"), f"{label}.environment", errors):
-        _text(environment.get("agent"), f"{label}.environment.agent", errors)
-        _text(environment.get("model"), f"{label}.environment.model", errors)
-
-    base = value.get("base")
-    base_score: int | None = None
-    if base is not None:
-        _, base_score = _score_record(base, f"{label}.base", errors)
-    _, current_score = _score_record(value.get("current"), f"{label}.current", errors)
-    _text(value.get("confirmed_by"), f"{label}.confirmed_by", errors)
-    _text(value.get("confirmed_at"), f"{label}.confirmed_at", errors)
-
-    entries = value.get("cases")
-    current_scores: dict[str, int] = {}
-    base_scores: dict[str, int] = {}
-    comparison_ids: list[str] = []
-    duplicate_id = False
-    if not isinstance(entries, list):
-        errors.append(f"{label}.cases: must be an array")
-    else:
-        seen: set[str] = set()
-        for index, entry in enumerate(entries):
-            entry_label = f"{label}.cases[{index}]"
-            if not _keys(entry, COMPARISON_CASE_KEYS, entry_label, errors):
-                if not isinstance(entry, dict):
-                    continue
-            case_id = entry.get("id")
-            id_valid = _text(case_id, f"{entry_label}.id", errors)
-            if id_valid:
-                if case_id in seen:
-                    duplicate_id = True
-                    errors.append(f"{entry_label}.id: duplicate case id {case_id!r}")
-                else:
-                    seen.add(case_id)
-                    comparison_ids.append(case_id)
-            case_current = entry.get("current")
-            if _score(case_current, f"{entry_label}.current", errors) and id_valid and case_id not in current_scores:
-                current_scores[case_id] = case_current
-            case_base = entry.get("base")
-            if base is None:
-                if case_base is not None:
-                    errors.append(f"{entry_label}.base: must be null when comparison.base is null")
-            elif _score(case_base, f"{entry_label}.base", errors) and id_valid and case_id not in base_scores:
-                base_scores[case_id] = case_base
-            _text(entry.get("rationale"), f"{entry_label}.rationale", errors)
-
-    coverage_valid = False
-    if suite_valid and isinstance(entries, list):
-        suite_set = set(suite_ids)
-        comparison_set = set(comparison_ids)
-        missing = sorted(suite_set - comparison_set)
-        extra = sorted(comparison_set - suite_set)
-        if missing:
-            errors.append(f"{label}.cases: missing suite ids {missing!r}")
-        if extra:
-            errors.append(f"{label}.cases: unknown suite ids {extra!r}")
-        coverage_valid = (
-            not missing
-            and not extra
-            and not duplicate_id
-            and len(comparison_ids) == len(suite_ids)
-        )
-
-    count = len(suite_ids)
-    if coverage_valid and count and len(current_scores) == count and current_score is not None:
-        aggregate = (sum(current_scores.values()) + count // 2) // count
-        if current_score != aggregate:
-            errors.append(
-                f"{label}.current.score: aggregate must be {aggregate}, got {current_score}"
-            )
-    if (
-        base is not None
-        and coverage_valid
-        and count
-        and len(base_scores) == count
-        and base_score is not None
-    ):
-        aggregate = (sum(base_scores.values()) + count // 2) // count
-        if base_score != aggregate:
-            errors.append(f"{label}.base.score: aggregate must be {aggregate}, got {base_score}")
-    return len(errors) == start
+        _text(case.get("tests"), f"{case_label}.tests", errors)
+        _texts(case.get("traps"), f"{case_label}.traps", errors, nonempty=False)
+        _texts(case.get("expectations"), f"{case_label}.expectations", errors, nonempty=True)
 
 
 def validate_eval(data: Any, expected_skill: str, label: str, errors: list[str]) -> bool:
     start = len(errors)
-    if not _keys(data, ROOT_KEYS, label, errors):
-        if not isinstance(data, dict):
-            return False
-
+    if not _keys(data, ROOT_KEYS, label, errors) and not isinstance(data, dict):
+        return False
     declared_skill = data.get("skill")
     if _text(declared_skill, f"{label}.skill", errors) and declared_skill != expected_skill:
         errors.append(
             f"{label}.skill: must exactly match frontmatter name {expected_skill!r}, "
             f"got {declared_skill!r}"
         )
-    suite_ids, suite_valid = _validate_cases(data.get("cases"), f"{label}.cases", errors)
-    comparison = data.get("comparison")
-    if comparison is not None:
-        _validate_comparison(
-            comparison,
-            suite_ids,
-            suite_valid,
-            f"{label}.comparison",
-            errors,
-        )
+    _validate_cases(data.get("cases"), f"{label}.cases", errors)
     return len(errors) == start
 
 
@@ -501,267 +366,422 @@ def _read_eval(path: Path, root: Path, expected_skill: str, errors: list[str]) -
     return data if validate_eval(data, expected_skill, label, errors) else None
 
 
-def _base_hashes(
-    root: Path, ref: str, skills: list[Skill], errors: list[str]
-) -> dict[str, str | None] | None:
-    try:
-        verified = subprocess.run(
-            ["git", "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}"],
-            cwd=root,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=False,
-        )
-    except OSError as exc:
-        errors.append(f"git: cannot resolve base {ref!r} ({exc})")
-        return None
-    if verified.returncode:
-        detail = verified.stderr.decode("utf-8", "replace").strip().replace("\n", " ")
-        suffix = f" ({detail})" if detail else ""
-        errors.append(f"git: base ref {ref!r} is not a commit{suffix}")
-        return None
-
-    listed = subprocess.run(
-        ["git", "ls-tree", "-r", "-z", "--full-tree", ref, "--", "skills"],
-        cwd=root,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        check=False,
-    )
-    if listed.returncode:
-        detail = listed.stderr.decode("utf-8", "replace").strip().replace("\n", " ")
-        errors.append(f"git: cannot list skills at base {ref!r} ({detail})")
-        return None
-
-    regular_files: list[bytes] = []
-    for entry in listed.stdout.split(b"\0"):
-        if not entry:
-            continue
-        try:
-            header, path = entry.split(b"\t", 1)
-            mode, object_type, _ = header.split(b" ", 2)
-        except ValueError:
-            errors.append(f"git: malformed ls-tree entry at base {ref!r}")
-            return None
-        if object_type == b"blob" and mode.startswith(b"100"):
-            regular_files.append(path)
-
-    cache: dict[bytes, bytes] = {}
-
-    def show(path: bytes) -> bytes | None:
-        if path in cache:
-            return cache[path]
-        path_text = path.decode("utf-8", "surrogateescape")
-        shown = subprocess.run(
-            ["git", "show", "--no-ext-diff", "--no-textconv", f"{ref}:{path_text}"],
-            cwd=root,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            check=False,
-        )
-        if shown.returncode:
-            detail = shown.stderr.decode("utf-8", "replace").strip().replace("\n", " ")
-            errors.append(f"git: cannot read {ref}:{path_text} ({detail})")
-            return None
-        cache[path] = shown.stdout
-        return shown.stdout
-
-    directories: dict[str, bytes] = {}
-    sources: dict[str, bytes] = {}
-    skill_paths = [
-        path
-        for path in regular_files
-        if path == b"skills/SKILL.md" or path.endswith(b"/SKILL.md")
-    ]
-    for path in skill_paths:
-        content = show(path)
-        if content is None:
-            return None
-        path_text = path.decode("utf-8", "surrogateescape")
-        metadata = _frontmatter(content, f"{ref}:{path_text}", errors)
-        if metadata is None:
-            continue
-        name = metadata["name"]
-        if name in directories:
-            errors.append(
-                f"{ref}:{path_text}: duplicate base skill name {name!r}; first declared by "
-                f"{ref}:{sources[name].decode('utf-8', 'surrogateescape')}"
-            )
-            continue
-        directories[name] = path.rsplit(b"/", 1)[0]
-        sources[name] = path
-
-    hashes: dict[str, str | None] = {}
-    for skill in skills:
-        directory = directories.get(skill.name)
-        if directory is None:
-            hashes[skill.name] = None
-            continue
-        prefix = directory + b"/"
-        package: list[tuple[bytes, bytes]] = []
-        for path in regular_files:
-            if not path.startswith(prefix):
-                continue
-            content = show(path)
-            if content is None:
-                return None
-            package.append((path[len(prefix) :], content))
-        hashes[skill.name] = skill_hash(package)
-    return hashes
-
-
-def audit(root: Path, base: str | None = None) -> AuditResult:
-    root = root.resolve()
+def structure(root: Path) -> tuple[dict[str, Skill], list[str]]:
+    """Run the structure checks on a tree; return its skills, with valid cases, and errors."""
     errors: list[str] = []
-    warnings: list[str] = []
     skills = _load_skills(root, errors)
-    by_name = {skill.name: skill for skill in skills}
-    _validate_readme(root, set(by_name), errors)
+    _validate_readme(root, set(skills), errors)
 
     eval_dir = root / "evals"
-    files = sorted(eval_dir.rglob("*.json")) if eval_dir.is_dir() else []
-    expected_paths = {eval_dir / f"{name}.json": name for name in by_name}
-    for path in files:
+    expected_paths = {eval_dir / f"{name}.json": name for name in skills}
+    for path in sorted(eval_dir.rglob("*.json")) if eval_dir.is_dir() else []:
         if path not in expected_paths:
             errors.append(f"{_label(root, path)}: orphan evaluation file")
 
-    records: dict[str, dict[str, Any]] = {}
     for path, name in sorted(expected_paths.items(), key=lambda item: item[1]):
         if not path.is_file():
             errors.append(f"{_label(root, path)}: missing evaluation file for skill {name!r}")
             continue
         record = _read_eval(path, root, name, errors)
         if record is not None:
-            records[name] = record
+            skills[name] = replace(skills[name], cases=tuple(record["cases"]))
+    return skills, errors
 
-    stale: dict[str, list[str]] = {name: [] for name in by_name}
-    for name, record in records.items():
-        comparison = record["comparison"]
-        if comparison is None:
+
+# ---------------------------------------------------------------- git snapshots
+
+
+def _git(root: Path, *args: str, stdin: bytes | None = None) -> bytes:
+    done = subprocess.run(["git", *args], cwd=root, input=stdin, capture_output=True)
+    if done.returncode:
+        detail = done.stderr.decode("utf-8", "replace").strip()
+        raise CheckError(f"git {' '.join(args)}: {detail}")
+    return done.stdout
+
+
+def snapshot_index(root: Path, dest: Path) -> None:
+    """Write the staged README.md, skills/ and evals/ to dest."""
+    listed = _git(root, "ls-files", "-z", "--", "README.md", "skills", "evals")
+    if listed:
+        _git(root, "checkout-index", "-z", "--stdin", f"--prefix={dest}/", stdin=listed)
+    dest.mkdir(parents=True, exist_ok=True)
+
+
+def snapshot_ref(root: Path, ref: str, dest: Path) -> None:
+    archive = _git(root, "archive", "--format=tar", ref)
+    with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
+        tar.extractall(dest, filter="data")
+
+
+def staged_paths(root: Path) -> list[str]:
+    return [
+        path.decode("utf-8", "surrogateescape")
+        for path in _git(root, "diff", "--cached", "--name-only", "-z").split(b"\0")
+        if path
+    ]
+
+
+def touched_skills(paths: list[str], skills: dict[str, Skill]) -> dict[str, bool]:
+    """Map each skill with a staged folder or eval file change to whether its folder changed.
+
+    A staged eval file whose skill is gone from the index belongs to a removed skill.
+    """
+    touched = {
+        path.removeprefix("evals/").removesuffix(".json"): False
+        for path in paths
+        if path.startswith("evals/") and path.endswith(".json")
+    }
+    for name, skill in skills.items():
+        if any(path.startswith(f"{skill.folder}/") for path in paths):
+            touched[name] = True
+    return touched
+
+
+def _master_cases(path: Path) -> tuple[Case, ...]:
+    """Cases from a master eval file; an unreadable file gives none."""
+    try:
+        cases = json.loads(path.read_text(encoding="utf-8"))["cases"]
+        return tuple(case for case in cases if isinstance(case, dict) and "id" in case)
+    except (OSError, ValueError, KeyError, TypeError):
+        return ()
+
+
+def changed_cases(staged: tuple[Case, ...], master: tuple[Case, ...]) -> list[str]:
+    """Describe every case whose prompt or expectations differ from master."""
+    master_by_id = {case["id"]: case for case in master}
+    staged_ids = {case["id"] for case in staged}
+    changes = []
+    for case in staged:
+        old = master_by_id.get(case["id"])
+        if old is None:
+            changes.append(f"{case['id']}: added")
             continue
-        if comparison["suite_hash"] != canonical_cases_hash(record["cases"]):
-            stale[name].append("suite hash does not match cases")
-        if comparison["current"]["skill_hash"] != by_name[name].hash:
-            stale[name].append("current skill hash does not match skill directory")
+        parts = [key for key in ("prompt", "expectations") if old.get(key) != case[key]]
+        if parts:
+            changes.append(f"{case['id']}: {' and '.join(parts)} changed")
+    changes.extend(f"{case_id}: removed" for case_id in master_by_id if case_id not in staged_ids)
+    return changes
 
-    base_hashes: dict[str, str | None] | None = None
-    selected = sorted(by_name)
-    if base is not None:
-        base_hashes = _base_hashes(root, base, skills, errors)
-        if base_hashes is None:
-            selected = []
-        else:
-            selected = sorted(
-                name
-                for name, skill in by_name.items()
-                if base_hashes[name] is None or base_hashes[name] != skill.hash
+
+# ---------------------------------------------------------------- runs and judging
+
+
+def _path_inside(path: str, cwd: Path) -> bool:
+    for part in path.split(";"):
+        part = part.strip()
+        if not part:
+            continue
+        if "://" in part or part.startswith("~"):
+            return False
+        if os.path.isabs(part):
+            real_cwd = os.path.realpath(cwd)
+            if os.path.commonpath([os.path.realpath(part), real_cwd]) != real_cwd:
+                return False
+        elif ".." in Path(part).parts:
+            return False
+    return True
+
+
+def run_omp(prompt: str, cwd: Path, system: str | None, tools: bool, log: Path) -> tuple[str, str]:
+    """Run one isolated `omp -p` session in cwd; return its answer and model."""
+    overlay = log.with_suffix(".overlay.yml")
+    overlay.write_text(OMP_OVERLAY, encoding="utf-8")
+    args = ["omp", *OMP_FLAGS, "--config", str(overlay), "--cwd", str(cwd)]
+    args += ["--tools", "read,grep,glob"] if tools else ["--no-tools"]
+    if system:
+        args += ["--append-system-prompt", system]
+    args.append(prompt)
+    # A hook's GIT_* variables would point the session at this repository.
+    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    try:
+        done = subprocess.run(
+            args, cwd=cwd, env=env, stdin=subprocess.DEVNULL, capture_output=True, timeout=TIMEOUT
+        )
+    except FileNotFoundError:
+        raise CheckError("omp is not on PATH") from None
+    except subprocess.TimeoutExpired:
+        raise CheckError(f"omp did not finish within {TIMEOUT}s") from None
+    log.write_bytes(done.stdout + (b"\n# stderr\n" + done.stderr if done.stderr else b""))
+    if done.returncode:
+        detail = done.stderr.decode("utf-8", "replace").strip().splitlines()
+        raise CheckError(f"omp exited {done.returncode}: {detail[-1] if detail else 'no output'}")
+
+    final: dict[str, Any] | None = None
+    for line in done.stdout.decode("utf-8", "replace").splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if event.get("type") == "tool_execution_start":
+            path = (event.get("args") or {}).get("path")
+            if isinstance(path, str) and not _path_inside(path, cwd):
+                raise CheckError(f"session read outside its directory: {path}")
+        if event.get("type") == "message_end" and event["message"].get("role") == "assistant":
+            final = event["message"]
+    if final is None:
+        raise CheckError("omp produced no answer")
+    if final.get("stopReason") != "stop":
+        raise CheckError(f"omp stopped with {final.get('stopReason')}: {final.get('errorMessage', '')}")
+    text = "".join(part.get("text", "") for part in final["content"] if part.get("type") == "text")
+    if not text.strip():
+        raise CheckError("omp gave an empty answer")
+    return text, _model_label(final)
+
+
+def _model_label(message: dict[str, Any]) -> str:
+    """Provider/model of an omp assistant message, plus its thinking effort when reported."""
+    effort = ((message.get("requestControls") or {}).get("effort") or {}).get("topLevel")
+    return f"{message.get('provider')}/{message.get('model')}" + (f" ({effort})" if effort else "")
+
+
+@dataclass(frozen=True)
+class Verdict:
+    passed: bool
+    reason: str
+
+
+def parse_verdicts(text: str, count: int) -> list[Verdict]:
+    start, end = text.find("["), text.rfind("]")
+    try:
+        items = json.loads(text[start : end + 1]) if start != -1 else None
+    except json.JSONDecodeError:
+        items = None
+    if not isinstance(items, list) or len(items) != count:
+        raise CheckError(f"judge output is not a JSON array of {count} verdicts")
+    verdicts = []
+    for number, item in enumerate(items, 1):
+        if (
+            not isinstance(item, dict)
+            or item.get("n") != number
+            or not isinstance(item.get("pass"), bool)
+            or not isinstance(item.get("reason"), str)
+            or not item["reason"].strip()
+        ):
+            raise CheckError(f"judge verdict {number} is malformed: {item!r}")
+        verdicts.append(Verdict(item["pass"], " ".join(item["reason"].split())))
+    return verdicts
+
+
+@dataclass
+class Outcome:
+    verdicts: list[Verdict] | None = None
+    error: str | None = None
+    models: set[str] = field(default_factory=set)
+    log: Path | None = None
+
+
+@dataclass(frozen=True)
+class Runs:
+    """Where sessions keep their files, the pool they share, and what runs them."""
+
+    out: Path
+    pool: ThreadPoolExecutor
+    runner: Runner
+
+    def workdir(self) -> Path:
+        # Random directory names keep the version out of what each session sees.
+        work = self.out / "work"
+        work.mkdir(exist_ok=True)
+        return Path(tempfile.mkdtemp(dir=work))
+
+    def start(
+        self, skill: Skill, cases: tuple[Case, ...], version: str
+    ) -> dict[str, Future[Outcome]]:
+        """Start one run per case on this version of the skill."""
+        return {
+            case["id"]: self.pool.submit(
+                run_case, case, skill, f"{skill.name}.{case['id']}.{version}", self
             )
-            for name in selected:
-                record = records.get(name)
-                if record is None or record["comparison"] is None:
-                    continue
-                recorded_base = record["comparison"]["base"]
-                old_hash = base_hashes[name]
-                if old_hash is None:
-                    if recorded_base is not None:
-                        stale[name].append("new skill records a non-null base")
-                elif recorded_base is None:
-                    stale[name].append("changed skill has no recorded base")
-                elif recorded_base["skill_hash"] != old_hash:
-                    stale[name].append("base skill hash does not match the requested ref")
+            for case in cases
+        }
 
-    for name in sorted(by_name):
-        record = records.get(name)
-        if record is None:
+
+def run_case(case: Case, skill: Skill, tag: str, runs: Runs) -> Outcome:
+    """Answer one case with one version of a skill, then judge the answer."""
+    outcome = Outcome(log=runs.out / f"{tag}.run.jsonl")
+    try:
+        workdir = runs.workdir()
+        for relative, content in skill.files:
+            target = workdir / relative.decode("utf-8", "surrogateescape")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(content)
+        answer, model = runs.runner(
+            case["prompt"], workdir, RUN_SYSTEM.format(name=skill.name), True, outcome.log
+        )
+        outcome.models.add(model)
+        expectations = "\n".join(f"{n}. {text}" for n, text in enumerate(case["expectations"], 1))
+        outcome.log = runs.out / f"{tag}.judge.jsonl"
+        verdict, model = runs.runner(
+            JUDGE_PROMPT % (case["prompt"], expectations, answer),
+            runs.workdir(),
+            None,
+            False,
+            outcome.log,
+        )
+        outcome.models.add(model)
+        outcome.verdicts = parse_verdicts(verdict, len(case["expectations"]))
+    except CheckError as exc:
+        outcome.error = str(exc)
+    return outcome
+
+
+# ---------------------------------------------------------------- check and report
+
+
+def _score(outcomes: dict[str, Outcome]) -> int:
+    return sum(v.passed for o in outcomes.values() if o.verdicts for v in o.verdicts)
+
+
+def _outcomes(started: dict[str, Future[Outcome]]) -> dict[str, Outcome]:
+    return {case_id: run.result() for case_id, run in started.items()}
+
+
+def _changed_results(
+    cases: tuple[Case, ...], master: dict[str, Outcome], staged: dict[str, Outcome]
+) -> list[str]:
+    """Expectations whose result differs between versions, with the staged judge's reason."""
+    lines = []
+    for case in cases:
+        old, new = master[case["id"]].verdicts, staged[case["id"]].verdicts
+        if not (old and new):
             continue
-        if record["comparison"] is None:
-            warnings.append(f"{name}: comparison is missing")
-        elif stale[name]:
-            warnings.append(f"{name}: comparison is stale ({'; '.join(stale[name])})")
-
-    rows: list[tuple[str, str]] = []
-    for name in selected:
-        record = records.get(name)
-        if record is None:
-            rows.append((name, "invalid evaluation"))
-            continue
-        comparison = record["comparison"]
-        if comparison is None:
-            rows.append((name, "comparison missing"))
-            continue
-        if stale[name]:
-            rows.append((name, "comparison stale"))
-            continue
-        previous = comparison["base"]
-        current = comparison["current"]["score"]
-        if previous is None:
-            rows.append((name, f"new → {current}"))
-            continue
-        previous_score = previous["score"]
-        delta = current - previous_score
-        score = f"{previous_score} → {current} ({delta:+d})"
-        rows.append((name, score))
-        if delta < 0:
-            warnings.append(f"{name}: regression {score}")
-
-    return AuditResult(rows, warnings, errors, base is None or base_hashes is not None)
+        for number, (expectation, was, now) in enumerate(zip(case["expectations"], old, new), 1):
+            if was.passed != now.passed:
+                result = "pass → fail" if was.passed else "fail → pass"
+                lines.append(f"- {case['id']} #{number} ({result}): {expectation}")
+                lines.append(f"  Staged judge: {now.reason}")
+    return ["Changed results:", *lines] if lines else []
 
 
-def _table_cell(value: str) -> str:
-    return value.replace("\n", " ").replace("|", "\\|")
+def _run_versions(staged: Skill, master: Skill, runs: Runs) -> tuple[list[str], list[str]]:
+    """Run and judge the staged cases on both versions; return report lines and block reasons.
 
-
-def render_report(result: AuditResult, base: str | None = None) -> str:
-    lines = ["## Skill evaluation report", ""]
-    if base is not None:
-        safe_base = base.replace("`", "'").replace("\n", " ")
-        lines.extend([f"Base: `{safe_base}`", ""])
-
-    if result.rows:
-        lines.extend(["| Skill | Score |", "| --- | --- |"])
-        for name, score in result.rows:
-            lines.append(f"| `{_table_cell(name)}` | {_table_cell(score)} |")
-    elif base is not None and not result.base_available:
-        lines.append("_Score deltas unavailable because the base ref could not be read._")
-    elif base is not None:
-        lines.append("_No skills changed from the base ref._")
+    A master without the skill gets no runs, and the report gives the staged score alone.
+    """
+    cases = staged.cases
+    total = sum(len(case["expectations"]) for case in cases)
+    staged_runs = runs.start(staged, cases, "staged")
+    if master.files:
+        master_runs = runs.start(master, cases, "master")
+        master_out, staged_out = _outcomes(master_runs), _outcomes(staged_runs)
+        before, after = _score(master_out), _score(staged_out)
+        scores = [f"Score: master {before}/{total} → staged {after}/{total}"]
+        scores += _changed_results(cases, master_out, staged_out)
+        dropped = after < before
     else:
-        lines.append("_No skills available to report._")
+        master_out, staged_out = {}, _outcomes(staged_runs)
+        scores = [f"Score: staged {_score(staged_out)}/{total} (master has no {staged.name})"]
+        dropped = False
 
-    if result.warnings:
-        lines.extend(["", "### Warnings", ""])
-        lines.extend(f"- {warning}" for warning in result.warnings)
-    if result.errors:
-        lines.extend(["", "### Errors", ""])
-        lines.extend(f"- {error}" for error in result.errors)
-    if not result.warnings and not result.errors:
-        lines.extend(["", "Validation passed."])
-    return "\n".join(lines)
+    versions = (("master", master_out), ("staged", staged_out))
+    models = sorted({model for _, out in versions for o in out.values() for model in o.models})
+    failures = [
+        f"- {case_id} ({version}): {o.error}" + (f" [{o.log}]" if o.log and o.log.exists() else "")
+        for version, out in versions
+        for case_id, o in out.items()
+        if o.error
+    ]
+    lines = [f"Model: {', '.join(models) or 'unknown (no session finished)'}", *scores]
+    if failures:
+        return [*lines, "Failures:", *failures], ["a run or judgment failed"]
+    return lines, ["the score dropped"] if dropped else []
+
+
+def compare(
+    staged: Skill, master: Skill, folder_staged: bool, runs: Runs
+) -> tuple[list[str], bool]:
+    """Report one skill and whether it blocks.
+
+    Runs happen only when its folder is staged and differs from master.
+    """
+    if not staged.files:
+        lines, reasons = ["Skill removed; no runs."], []
+    elif not folder_staged:
+        lines, reasons = ["Skill folder not staged; no runs."], []
+    elif staged.files == master.files:
+        lines, reasons = ["Staged skill folder matches master; no runs."], []
+    else:
+        lines, reasons = _run_versions(staged, master, runs)
+    changes = changed_cases(staged.cases, master.cases)
+    if changes:
+        lines += ["Changed cases:", *(f"- {change}" for change in changes)]
+        reasons.append("cases changed")
+    if reasons:
+        lines.append(f"Blocked: {'; '.join(reasons)}.")
+    return [f"## {staged.name}", *lines], bool(reasons)
+
+
+def check(root: Path, names: list[str] | None = None, runner: Runner = run_omp) -> tuple[str, bool]:
+    """Check the staged tree; return the report and whether it blocks.
+
+    Works in a scratch folder, kept only when it holds raw session outputs.
+    """
+    out = Path(tempfile.mkdtemp(prefix="skill-evals-"))
+    try:
+        with ThreadPoolExecutor(CONCURRENCY) as pool:
+            report, blocked = _run_checks(root, names, Runs(out, pool, runner))
+    finally:
+        if not any(out.glob("*.jsonl")):
+            shutil.rmtree(out)
+    return (f"{report}\nRaw outputs: {out}" if out.exists() else report), blocked
+
+
+def _run_checks(root: Path, names: list[str] | None, runs: Runs) -> tuple[str, bool]:
+    staged_root, master_root = runs.out / "staged", runs.out / "master"
+    snapshot_index(root, staged_root)
+    skills, errors = structure(staged_root)
+    if errors:
+        return "\n".join(["## Structure checks failed", *(f"- {e}" for e in errors)]), True
+
+    if names is None:
+        touched = touched_skills(staged_paths(root), skills)
+    else:
+        unknown = sorted(set(names) - set(skills))
+        if unknown:
+            return f"Unknown skills: {', '.join(unknown)}", True
+        touched = dict.fromkeys(names, True)  # a named skill counts as a staged folder
+    if not touched:
+        return "Structure checks passed; no skill or eval changes staged.", False
+
+    try:
+        snapshot_ref(root, MASTER_REF, master_root)
+    except CheckError as exc:
+        return f"Cannot read {MASTER_REF}: {exc}", True
+    master_skills = {
+        name: replace(skill, cases=_master_cases(master_root / "evals" / f"{name}.json"))
+        for name, skill in _load_skills(master_root, []).items()
+    }
+
+    lines, blocked = [], False
+    for name, folder_staged in sorted(touched.items()):
+        print(f"evals: checking {name}…", file=sys.stderr, flush=True)
+        absent = Skill(name, "", ())
+        skill_lines, skill_blocked = compare(
+            skills.get(name, absent), master_skills.get(name, absent), folder_staged, runs
+        )
+        lines += [*skill_lines, ""]
+        blocked = blocked or skill_blocked
+    return "\n".join(lines), blocked
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--base", help="Git ref used to identify and verify changed skills")
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("skills", nargs="*", help="skill names to check instead of the staged ones")
     args = parser.parse_args(argv)
-
     try:
-        root = find_repo_root()
-        result = audit(root, args.base)
-    except RuntimeError as exc:
-        result = AuditResult([], [], [str(exc)], base_available=False)
-    report = render_report(result, args.base)
-
-    summary = os.environ.get("GITHUB_STEP_SUMMARY")
-    if summary:
-        try:
-            with open(summary, "a", encoding="utf-8") as stream:
-                stream.write(report + "\n")
-        except OSError as exc:
-            result.errors.append(f"GITHUB_STEP_SUMMARY: cannot append report ({exc})")
-            report = render_report(result, args.base)
-
+        root = Path(_git(Path.cwd(), "rev-parse", "--show-toplevel").decode().strip())
+        report, blocked = check(root, args.skills or None)
+    except CheckError as exc:
+        report, blocked = str(exc), True
     print(report)
-    return 1 if result.errors else 0
+    if blocked:
+        print(
+            "\nCommit blocked. To approve it, follow 'Approve a block' in AGENTS.md.",
+            file=sys.stderr,
+        )
+    return 1 if blocked else 0
 
 
 if __name__ == "__main__":
