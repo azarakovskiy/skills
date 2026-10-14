@@ -51,7 +51,7 @@ Under a split verdict, list each part by the outcome it delivers:
 
 ### Model
 
-Nudge toward a model class (cheap, standard, frontier) and a relative effort, with one task-grounded reason, for example "a frontier model on fairly high effort: reasoning through crash interleavings" or "a cheap model on low effort: three settled label edits". Keep it relative; the user maps it to their lineup. Give one nudge per part or step when their needs differ.
+In one sentence, nudge toward a model class (cheap, standard, frontier) and a relative effort with one task-grounded reason, for example "a frontier model on fairly high effort: reasoning through crash interleavings" or "a cheap model on low effort: three settled label edits". The nudge is the whole answer to any model question the user raised. Keep it relative; the user maps it to their lineup. Give one nudge per part or step when their needs differ.
 
 ### Next
 
