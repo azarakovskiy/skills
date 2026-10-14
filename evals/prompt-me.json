@@ -78,14 +78,14 @@
     {
       "id": "write-standalone-prompt-per-part",
       "prompt": "Continue prompt-me from a confirmed brief; I chose 'Write the prompts'. The confirmed brief:\n\nGoal: move our product documentation from the old wiki export in `wiki-export/` to the new docs site in `site/docs/`, so every live wiki page has a matching site page.\nDecisions: skip pages marked 'archived'; keep each page's title and slug; leave the old wiki untouched.\nDone when: every non-archived wiki page has a site page with the same title and slug, and the site builds.\nFit: Split into 2 parts — the export has about 400 pages, too many to inventory and rewrite in one pass.\n- Inventory — done when `migration/inventory.md` lists every non-archived page with its slug and target section; runs first.\n- Migration — done when every page in `migration/inventory.md` exists on the site with its title and slug, and the site builds; needs `migration/inventory.md`.\nModel: inventory — a cheap model on low effort, because it is mechanical listing; migration — a standard model on moderate effort, because each page needs rewriting into the new format.",
-      "tests": "Writes one standalone, copyable prompt per part of a confirmed split, each carrying its settled decisions, its model nudge, and the inventory file the migration needs.",
+      "tests": "Writes one standalone, copyable prompt per part of a confirmed split, each carrying its settled decisions and the inventory file the migration needs, while the brief's model nudges stay out of the prompts.",
       "traps": [
         "Names no page format, section scheme or build command; the prompts must leave those to the executor."
       ],
       "expectations": [
         "The response supplies two copyable prompts, one per part, each runnable in a fresh session without this conversation, and executes neither part.",
         "The inventory prompt produces `migration/inventory.md`, and the migration prompt names that file as the input it needs from the inventory part.",
-        "Each prompt carries its own part's model suggestion as a relative class and effort with its reason.",
+        "Neither prompt contains a model class or effort suggestion; the brief's model nudges are left for the user, not passed to the executor.",
         "Each settled decision appears in every prompt it bears on: archived pages skipped, titles and slugs kept, and the old wiki left untouched.",
         "Every open choice is the executor's: neither prompt tells it to ask the user, wait for a human, or return for approval, and neither adds requirements beyond the confirmed brief."
       ]
