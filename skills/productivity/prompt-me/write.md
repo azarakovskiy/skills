@@ -1,21 +1,17 @@
 # Write the execution prompt
 
-Apply [prompt-quality.md](prompt-quality.md) to write the confirmed brief as the minimum **standalone** prompt: it must make sense without this conversation. Keep precise user wording; leave an already adequate prompt unchanged.
+Apply [prompt-quality.md](prompt-quality.md) to turn the confirmed brief into the minimum **standalone** prompt: it makes sense without this conversation and runs AFK, so every open choice is the executor's to make. Keep the user's precise wording; leave an already adequate prompt unchanged.
 
-- Carry forward settled decisions and necessary user-provided facts. Use resolvable pointers for discoverable facts and require lookup or verification before relying on unknowns.
-- Add an example only when the output pattern would otherwise be ambiguous.
-- Separate instructions, context, and input with a heading or a tag only when they could be confused.
-- Write one prompt per agreed pass. Name prerequisite outputs and where to find them so later passes can resume without the earlier conversation.
-- Carry the applicable **Models** category, effort, and concise task-grounded reason into each prompt, leaving specific model selection to the user. Keep switching advisory; preserve every **Required** capability and its task-grounded reason separately.
+- Write one prompt per part of a split. Name what a part needs from earlier parts and where to find it.
+- Carry the brief's model nudge into each prompt.
 
-Revalidate the finished prompt against the confirmed brief: preserve every requirement and settled decision, remove contradictions or invented requirements, and keep remaining unknowns explicit.
+Revalidate each prompt against the confirmed brief and every line of prompt-quality.md: every settled decision carried, nothing invented, no question left for a human.
 
-Send a labeled copyable block for each pass, then the session verdict:
+Send one labeled, copyable block per prompt:
 
 ````
+**<part name>**
 ```markdown
 <the prompt>
 ```
-Run this prompt <in a new session | here>.
-Reason: <one sentence>
 ````
