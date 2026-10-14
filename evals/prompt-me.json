@@ -4,7 +4,12 @@
     {
       "id": "catch-unstated-gaps",
       "prompt": "Use prompt-me on this request: automatically delete old customer records from production.",
-      "criteria": [
+      "tests": "Finds and asks the conceptual decisions an unqualified deletion request leaves open, each framed as an outcome or limit rather than a mechanism.",
+      "traps": [
+        "Does not flag what makes a record old, which records must be kept, or whether deletion must be reversible; the response must find these itself.",
+        "Says \"production\" but names no safeguards, a lure toward questions about mechanisms such as backups or kill switches."
+      ],
+      "expectations": [
         "Although the request does not flag them, the response asks the user to decide what makes a record old, which records must be kept for legal or business reasons, and whether deletion must be reversible, before presenting a brief.",
         "The response treats none of these as decided: any value it proposes is a recommendation awaiting the user's answer.",
         "The questions are specific enough for the user's answers to determine what may be deleted and what protections or verification the task requires.",
@@ -14,7 +19,12 @@
     {
       "id": "split-by-outcome-and-route",
       "prompt": "Use prompt-me on this fully specified request: replace password authentication with passkeys across the database, API, web app, and mobile apps; preserve account recovery; migrate existing users; stage the rollout; update operator documentation; and verify each client plus rollback. This thread also contains several rejected authentication designs and a long unrelated incident investigation.",
-      "criteria": [
+      "tests": "Gives a one-line, load-based split verdict for a large settled change, names each part by its outcome, and recommends writing prompts because the thread holds interfering material.",
+      "traps": [
+        "Gives no token sizes or context window, so the verdict must rest on load, not arithmetic.",
+        "Describes the rejected designs and unrelated investigation without showing them."
+      ],
+      "expectations": [
         "The brief's fit verdict is a single line that splits the work, with a reason grounded in what must be loaded and verified together and no token estimates or budget arithmetic.",
         "Each part is named by its outcome and is a complete, checkable result; a part that needs an earlier part's output names that output and runs after it.",
         "The brief recommends writing the prompts rather than running here and names the rejected designs or the unrelated investigation as the interference.",
@@ -25,7 +35,12 @@
     {
       "id": "plain-yes-takes-recommended-route",
       "prompt": "Continue a prompt-me workflow from this state. Your previous message presented a brief to add per-account API rate limiting of 100 requests per minute, return HTTP 429 when the limit is exceeded, document the limit, and verify allowed and rejected requests. It ended with 'Next: Write the prompt (recommended), or Run it here', and the recommendation cited rejected designs earlier in this thread. My reply is: 'Yes, that's correct.'",
-      "criteria": [
+      "tests": "Treats a plain yes as confirming the brief and choosing the recommended route, and writes the standalone prompt without executing it.",
+      "traps": [
+        "Summarizes the earlier brief instead of showing it.",
+        "The reply confirms the brief but names no route."
+      ],
+      "expectations": [
         "The response treats the reply as confirming the brief and choosing the recommended route, and writes a standalone, copyable execution prompt without asking which route to take.",
         "The prompt carries the limit of 100 requests per minute per account word for word, along with the HTTP 429 response, the documentation, and the allowed and rejected request checks.",
         "The prompt leaves technical choices such as the limiting algorithm, storage, and code layout to the executor.",
@@ -35,7 +50,11 @@
     {
       "id": "small-clear-task-runs-here",
       "prompt": "Use prompt-me on this already approved plan. In a small static site, change only the three button labels 'Send' to 'Submit' in contact.html, support.html, and feedback.html; leave attributes, handlers, layout, and other text unchanged. Verify the three rendered labels and that each form still submits through its existing handler. The files and existing form smoke checks are available to the executor; there are no unresolved design choices. I assume we need the strongest available model at maximum reasoning effort for reliable quality, but please assess whether that is actually warranted.",
-      "criteria": [
+      "tests": "Recommends running a small, approved mechanical edit here on a cheap model at low effort, answering the user's maximum-effort assumption.",
+      "traps": [
+        "Wrongly assumes the strongest model at maximum effort is needed."
+      ],
+      "expectations": [
         "The response presents the brief without clarifying questions and without reopening the approved scope or checks.",
         "The model line nudges toward a cheap model class on low effort with a task-grounded reason, directly answering that the strongest model at maximum effort is not warranted.",
         "The model advice is relative and short: a class and a relative effort, with no named models, exact effort settings, or capability breakdown.",
@@ -45,7 +64,11 @@
     {
       "id": "differentiate-planning-and-mechanical-execution",
       "prompt": "Use prompt-me to prepare a brief for this fully specified documentation task, not to execute it now. We have two agreed steps for one small retry-protocol specification. First, derive and check a state-transition table for a worker that may crash before or after sending a request or recording its response: retries reuse a stable operation ID, the server atomically deduplicates that ID with its side effect, duplicate responses return the stored result, and a timeout cannot be treated as proof that the side effect did not happen. Show why each crash point preserves at-most-once side effects and eventual completion once the worker and server recover. Second, after the table is checked, copy its rows into three existing documentation templates using their fixed column mapping; a deterministic checker compares every copied cell with the source table. All policies, templates, mappings, and checks are settled, the executor receives them together, and deployment or production changes are out of scope. Recommend how to staff these two steps for reliable quality; do not perform either step.",
-      "criteria": [
+      "tests": "Nudges the two steps of one pass toward different models, a frontier model on high effort for the crash-state analysis and a cheap one on low effort for copying the checked table, without splitting to vary models.",
+      "traps": [
+        "Presents two steps that suit different models, a lure toward one session per step."
+      ],
+      "expectations": [
         "The model advice nudges the crash-state analysis toward a frontier model on high effort and the table copying toward a cheap model on low effort.",
         "Each nudge has a short reason grounded in the work: reasoning through failure interleavings versus copying a checked table through a fixed mapping with deterministic verification.",
         "The brief preserves both deliverables and the dependency of the copying on a checked table, and does not add parts or sessions solely to vary models.",
@@ -55,7 +78,11 @@
     {
       "id": "write-standalone-prompt-per-part",
       "prompt": "Continue prompt-me from a confirmed brief; I chose 'Write the prompts'. The confirmed brief:\n\nGoal: move our product documentation from the old wiki export in `wiki-export/` to the new docs site in `site/docs/`, so every live wiki page has a matching site page.\nDecisions: skip pages marked 'archived'; keep each page's title and slug; leave the old wiki untouched.\nDone when: every non-archived wiki page has a site page with the same title and slug, and the site builds.\nFit: Split into 2 parts — the export has about 400 pages, too many to inventory and rewrite in one pass.\n- Inventory — done when `migration/inventory.md` lists every non-archived page with its slug and target section; runs first.\n- Migration — done when every page in `migration/inventory.md` exists on the site with its title and slug, and the site builds; needs `migration/inventory.md`.\nModel: inventory — a cheap model on low effort, because it is mechanical listing; migration — a standard model on moderate effort, because each page needs rewriting into the new format.",
-      "criteria": [
+      "tests": "Writes one standalone, copyable prompt per part of a confirmed split, each carrying its settled decisions, its model nudge, and the inventory file the migration needs.",
+      "traps": [
+        "Names no page format, section scheme or build command; the prompts must leave those to the executor."
+      ],
+      "expectations": [
         "The response supplies two copyable prompts, one per part, each runnable in a fresh session without this conversation, and executes neither part.",
         "The inventory prompt produces `migration/inventory.md`, and the migration prompt names that file as the input it needs from the inventory part.",
         "Each prompt carries its own part's model suggestion as a relative class and effort with its reason.",
@@ -66,7 +93,11 @@
     {
       "id": "no-invented-implementation",
       "prompt": "Use prompt-me on this request: in our Go web service, add an audit log so admins can see who changed account settings. I have not decided whether reads are logged as well as changes, how long entries are kept, or who besides admins may view the log.",
-      "criteria": [
+      "tests": "Asks only the three conceptual decisions the user left open and leaves storage, schema and other technical choices to the executor.",
+      "traps": [
+        "Names a Go web service but no storage, schema or packages, a lure toward technical questions."
+      ],
+      "expectations": [
         "The response asks the user to decide whether reads are logged, how long entries are kept, and who may view the log, and treats none of them as decided.",
         "The response does not ask the user about technical choices such as storage, tables, packages, files, API design, or data schemas.",
         "The response waits for the answers instead of presenting the brief as confirmed or executing."
@@ -75,13 +106,16 @@
     {
       "id": "short-brief-with-status-quo",
       "prompt": "Use prompt-me on this settled request: our CLI prints errors as plain text to stdout, and two downstream scripts parse that output. Switch errors to JSON on stderr, update both downstream scripts in the same change so they keep working, and leave success output unchanged. All decisions are settled.",
-      "criteria": [
+      "tests": "Presents a one-screen brief for a settled change that states the status quo it changes, with no plan, implementation steps, or prescribed JSON fields.",
+      "traps": [
+        "Names no JSON fields, a lure toward prescribing them."
+      ],
+      "expectations": [
         "The response presents the brief without clarifying questions.",
         "The brief states the status quo: errors currently go to stdout as plain text and two downstream scripts parse them.",
         "The brief fits one screen and covers the goal, the settled decisions, done-when conditions, a one-line fit verdict, and a model nudge, with no plan, implementation steps, or prescribed JSON fields.",
         "The brief ends with a recommended route, and the response waits for the user's reply instead of executing."
       ]
     }
-  ],
-  "comparison": null
+  ]
 }
