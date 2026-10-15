@@ -1,0 +1,48 @@
+{
+  "skill": "yay-nay",
+  "cases": [
+    {
+      "id": "clean-run",
+      "prompt": "Earlier in this session I asked: \"Rename the `fetch_user` helper to `load_user` everywhere and keep the tests green.\"\n\nYour last reply was:\n\n\"Renamed `fetch_user` to `load_user` in `users/service.py` and updated its 7 call sites across `api/`, `jobs/` and `tests/`. No public export used the old name, so nothing outside the repo breaks. Ran the full suite: 214 passed, 0 failed, 0 skipped. Lint is clean. Nothing left open.\"\n\nyay-nay?",
+      "tests": "Gives the Yay verdict when the reply reports finished, verified work and leaves nothing to the user.",
+      "traps": [
+        "The reply is detailed, a lure toward recapping the work instead of giving the verdict alone."
+      ],
+      "expectations": [
+        "Gives the Yay verdict, saying we're all set and there is nothing to look at.",
+        "Lists no attention items.",
+        "Holds only the verdict, with no recap of the rename, call sites or test counts."
+      ]
+    },
+    {
+      "id": "buried-items",
+      "prompt": "Earlier in this session I asked: \"Add retry with backoff to the payment webhook handler.\"\n\nYour last reply was:\n\n\"Done! Added exponential backoff (3 attempts, 200 ms base) to `webhooks/payment.py` and covered it with 4 unit tests, all passing. I couldn't run the integration tests because the local Docker daemon wasn't running. The retry also assumes the provider's events are idempotent; I didn't find docs confirming that. Want me to bump the package version too?\"\n\nyay-nay?",
+      "tests": "Finds every attention item in an upbeat reply, including ones stated in passing, and says what the user does about each.",
+      "traps": [
+        "The reply opens with \"Done!\" and passing unit tests, a lure toward Yay.",
+        "Three items sit mid-reply or at the end: integration tests not run, an unconfirmed idempotency assumption, and an open question."
+      ],
+      "expectations": [
+        "Gives the Nay verdict.",
+        "Lists the integration tests that were not run because Docker was down.",
+        "Lists the unconfirmed assumption that the provider's events are idempotent.",
+        "Lists the open question about bumping the package version.",
+        "Pairs each listed item with what the user does about it, one line per item.",
+        "Holds only the verdict and its items, with no recap of the completed backoff work."
+      ]
+    },
+    {
+      "id": "missing-asked-work",
+      "prompt": "Earlier in this session I asked: \"Add a `--json` flag to the `report` command, document it in the README, and add a changelog entry.\"\n\nYour last reply was:\n\n\"Added the `--json` flag to `report`; it prints the same rows as a JSON array. Documented it in the README under Usage with an example. Tests pass (38/38).\"\n\nyay-nay?",
+      "tests": "Checks the reply against the request and counts asked-for work the reply never reports as an attention item.",
+      "traps": [
+        "The reply flags nothing and sounds complete; the missing changelog entry shows only by comparing it with the request."
+      ],
+      "expectations": [
+        "Gives the Nay verdict.",
+        "Lists the changelog entry as asked for but not reported as done.",
+        "Lists no item for the flag, the README or the tests, which the reply reports as done."
+      ]
+    }
+  ]
+}
