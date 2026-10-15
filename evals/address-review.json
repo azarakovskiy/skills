@@ -1,0 +1,72 @@
+{
+  "skill": "address-review",
+  "cases": [
+    {
+      "id": "label-on-merit",
+      "prompt": "Run address-review on my merge request https://git.acme.dev/payments/ledger/-/merge_requests/214. I pasted what it shows below.\n\nTitle: Retry failed webhook deliveries\nDescription: Implements PAY-412. Deliveries that fail with a 5xx or a timeout are retried up to 5 times with exponential backoff, and every attempt is recorded in `delivery_attempts`.\nLinked ticket PAY-412: Retry webhook deliveries that fail with a 5xx response or a timeout, up to 5 attempts with exponential backoff, and record every attempt. Out of scope: the delivery dashboard, and email and SMS notifications.\nChanged files: `webhooks/deliver.go`, `webhooks/retry.go`, `webhooks/retry_test.go`, `db/migrations/0042_delivery_attempts.sql`. The repo's CONTRIBUTING.md covers formatting and commit messages only.\n\nOpen review threads, none answered yet:\n1. Dana on `webhooks/retry.go:41`: \"nit: `backoff` doubles with no cap, so attempt 5 waits 16 minutes. The delivery worker's lease is 10 minutes, so another worker takes the job mid-wait and sends the same webhook again.\"\n2. Lee on `webhooks/deliver.go:52`: \"must change: please use a `switch` on the status code instead of this if/else chain. I find switches easier to read.\"\n3. Dana on `webhooks/retry.go:18`: \"Typo in the doc comment: 'exponental'.\"\n4. Lee on `webhooks/retry_test.go:1`: \"suggestion: only the 5xx path has a test. Can you add one for the timeout path?\"\n5. Priya on `webhooks/deliver.go:30`: \"Retrying in-process with a sleep means every deploy drops the pending retries. I think retries belong on the job queue we already use for emails. Can you sketch how that would look? We need to settle this before merge.\"\n6. Priya on `db/migrations/0042_delivery_attempts.sql:3`: \"Why is `attempt_no` a SMALLINT and not an INT?\"\n7. Lee on `webhooks/deliver.go:5`: \"FYI: the platform team moves all outbound HTTP to a shared client next quarter.\"\n\nThere are no other comments.",
+      "tests": "Labels every open comment on its merit, shows the reviewer's label beside its own where they differ, proposes a new label when none fits, keeps the investigation shallow, and waits for the user's decisions.",
+      "traps": [
+        "Comment 1 is marked 'nit' by its reviewer but describes duplicate deliveries, comment 2 is marked 'must change' but is a matter of taste, and comment 4's 'suggestion' is close in meaning to its label but not the same word.",
+        "Comment 7 asks for nothing and fits none of the labels.",
+        "Comment 5 asks for a sketch of the job-queue approach, a lure toward designing it during triage."
+      ],
+      "expectations": [
+        "Labels comment 3 (the typo) as nit, comment 4 (the missing timeout test) as should change, comment 5 (in-process retries versus the job queue) as blocker, and comment 6 (SMALLINT) as question.",
+        "Labels comment 1 as must change although the reviewer wrote 'nit', and comment 2 as personal preference although the reviewer wrote 'must change', and shows the reviewer's own label next to its own on comments 1, 2 and 4 ('nit', 'must change' and 'suggestion').",
+        "Says that no label fits comment 7, rather than labeling it nit, personal preference, should change, must change, blocker or question, and proposes a new label for that kind of comment for the user to add to the list.",
+        "Keeps the investigation shallow: for comment 5 it gives a rough size for moving retries to the job queue and leaves the sketch the reviewer asked for until after the user decides, instead of writing it out now.",
+        "Ends by asking the user to decide each comment, and changes, pushes or posts nothing."
+      ]
+    },
+    {
+      "id": "open-comments-against-scope",
+      "prompt": "Run address-review on my merge request https://git.acme.dev/payments/ledger/-/merge_requests/214. I pasted what it shows below.\n\nTitle: Retry failed webhook deliveries\nDescription: Implements PAY-412. Deliveries that fail with a 5xx or a timeout are retried up to 5 times with exponential backoff, and every attempt is recorded in `delivery_attempts`.\nLinked ticket PAY-412: Retry webhook deliveries that fail with a 5xx response or a timeout, up to 5 attempts with exponential backoff, and record every attempt. Out of scope: the delivery dashboard, and email and SMS notifications.\nChanged files: `webhooks/deliver.go`, `webhooks/retry.go`, `webhooks/retry_test.go`, `db/migrations/0042_delivery_attempts.sql`.\n\nReview threads:\n- Dana on `webhooks/retry.go:22`, open: \"Can we log the attempt number with each retry? Debugging this in production will be painful otherwise.\"\n- Lee on `webhooks/deliver.go:48`, open: \"While you're here: email notifications fail the same way. Can you add retries to `notify/email.go` too?\"\n- Priya on `webhooks/retry.go:9`, resolved: \"Use the shared clock helper so tests can fake time.\"\n- Priya on `webhooks/retry.go:30`, open: \"Nice, this is much easier to follow than the old loop.\"\n- Dana on `webhooks/deliver.go:30`, open. Dana: \"Does this retry on a 429?\" Me, the latest message: \"No. PAY-412 limits retries to 5xx and timeouts; 429 needs Retry-After handling, which PAY-415 covers.\"\n\nComments outside threads:\n- Priya: \"Approving once the maximum number of attempts comes from config instead of the hard-coded 5.\"\n- Lee: \"Nice cleanup of the delivery loop.\"",
+      "tests": "Picks the open comments by the coverage rules, states the scope and judges each recommendation against it, and works from a merge request link on a self-hosted code host.",
+      "traps": [
+        "One open thread ends with the author's own reply, one thread is resolved, one open thread holds only praise, and one comment outside a thread asks for nothing.",
+        "Lee's request sounds like a small add-on but falls outside the ticket's scope.",
+        "The link is a merge request on a self-hosted code host, not a GitHub pull request."
+      ],
+      "expectations": [
+        "Handles exactly four comments: Dana's request to log the attempt number, Lee's request to add email retries, Priya's request to read the maximum number of attempts from config, and Priya's unresolved praise thread on `webhooks/retry.go:30`.",
+        "Does not present the resolved clock-helper thread, the 429 thread whose latest message is the author's own reply, or Lee's praise outside any thread as comments to handle; at most it lists them as skipped.",
+        "Before the comments, states in one line what PAY-412 set out to deliver; it then recommends deferring the email-retries request to a follow-up ticket because the ticket puts email notifications out of scope, and recommends the attempt-number logging for this merge request as within scope.",
+        "For each handled comment, says what it asks, why the reviewer asks it, and what resolving it takes.",
+        "Works from the self-hosted merge request link as given and mentions no other code host or host tool, such as GitHub or `gh`."
+      ]
+    },
+    {
+      "id": "decisions-become-exact-changes",
+      "prompt": "Continue address-review on my merge request https://git.acme.dev/payments/ledger/-/merge_requests/214. Its ticket, PAY-412, retries webhook deliveries that fail with a 5xx or a timeout, up to 5 attempts with exponential backoff; email and SMS notifications are out of scope. This session has write access to the merge request and to the PAY tracker.\n\nYour previous message presented four open comments:\n1. must change (Dana wrote 'nit'), `webhooks/retry.go:41`: `backoff` doubles with no cap, so attempt 5 waits 16 minutes, past the worker's 10-minute lease, and another worker sends the webhook again. Recommend: fix in this merge request by capping the wait at 5 minutes.\n2. should change, Lee, `webhooks/deliver.go:48`: add retries to email notifications in `notify/email.go`. Recommend: defer, because PAY-412 puts email out of scope.\n3. personal preference (Lee wrote 'blocking'), `webhooks/deliver.go:52`: use a `switch` instead of the two-branch if/else chain. Recommend: disagree.\n4. question, Priya, `db/migrations/0042_delivery_attempts.sql:3`: why SMALLINT and not INT for `attempt_no`? Recommend: answer that attempts stop at 5, so SMALLINT holds every value.\n\nThe current code in `webhooks/retry.go`:\n```go\nconst maxAttempts = 5\n\n// backoff returns the wait before the given attempt.\nfunc backoff(attempt int) time.Duration {\n\treturn 30 * time.Second << attempt\n}\n```\n\nMy reply: \"1 fix, 2 defer, 3 I disagree, 4 answer it. Go ahead.\"",
+      "tests": "Turns the user's decisions into an exact diff and ticket text for approval, holds the replies until the push and the ticket exist, and gets a reason for the disagreement.",
+      "traps": [
+        "'Go ahead' approves the decisions before any diff, ticket or reply text exists.",
+        "The disagreement with comment 3 comes without a reason.",
+        "The earlier recommendation and the reply say only 'defer'; neither names a follow-up ticket."
+      ],
+      "expectations": [
+        "Makes the backoff cap for comment 1 itself and shows its exact diff, asking for approval before pushing it.",
+        "Shows the full text of a follow-up ticket for the email-retries comment and asks for approval before creating it.",
+        "Treats 'Go ahead' as approval of the decisions, not of any diff or text: it reports nothing as pushed, created, posted or resolved.",
+        "Gets a reason for disagreeing with comment 3 from the user, by asking for it or proposing one for the user to confirm, so the reply can state it.",
+        "Holds the reply to comment 1 until the fix is pushed and the reply to comment 2 until the ticket exists to link; it posts no reply in this message."
+      ]
+    },
+    {
+      "id": "replies-follow-decisions",
+      "prompt": "Continue address-review on my merge request https://git.acme.dev/payments/ledger/-/merge_requests/214. This session can post and resolve on the merge request. I approved your diff and ticket: you pushed commit `7f3c9e1`, which caps the backoff at 5 minutes, and created PAY-431 (https://tracker.acme.dev/browse/PAY-431) for email retries. The decided comments:\n\n1. Dana on `webhooks/retry.go:41`: \"Great work overall! nit: `backoff` doubles with no cap, so attempt 5 waits 16 minutes, past the worker's 10-minute lease, and another worker sends the same webhook again.\" Decision: fix.\n2. Lee on `webhooks/deliver.go:48`: \"While you're here: email notifications fail the same way. Can you add retries to `notify/email.go` too?\" Decision: defer.\n3. Lee on `webhooks/deliver.go:52`: \"blocking: please use a `switch` on the status code instead of this if/else chain. I find switches easier to read.\" Decision: I disagree. My reason: \"Honestly, it's not that I dislike switches — it's that every other handler in webhooks/ checks the status with if/else (I went through all six), and this chain has only two branches, so a switch adds lines without making anything clearer.\"\n4. Priya on `db/migrations/0042_delivery_attempts.sql:3`: \"Why is `attempt_no` a SMALLINT and not an INT?\" Decision: answer. My answer: attempts stop at 5 (`maxAttempts`), so SMALLINT holds every value, and the table grows by about 40 million rows a month, so the smaller column saves space.",
+      "tests": "Drafts one reply per decision for approval: the fix names its commit, the deferral links its ticket, the disagreement gives the author's reason and keeps its thread open, and every reply follows the skill's reply rules.",
+      "traps": [
+        "Dana's comment opens with praise, a lure toward a thank-you opener.",
+        "The author's reason uses an 'Honestly' opener, an em dash and a 'not X but Y' contrast, lures for copying them into the reply."
+      ],
+      "expectations": [
+        "Shows the exact text of all four replies and which threads it will resolve, and asks for approval before posting or resolving anything.",
+        "The reply to comment 1 says what changed and names commit 7f3c9e1, and the reply to comment 2 links PAY-431.",
+        "The reply to comment 3 gives the author's reason for keeping the if/else chain, and the plan leaves that thread open while resolving the threads of comments 1, 2 and 4.",
+        "Each reply is written as the author, in first person, and opens with its outcome (the fix, the ticket, the disagreement or the answer) rather than with praise, thanks or a restatement of the comment.",
+        "No reply contains an em or en dash, a 'not X but Y' contrast, an 'Honestly' opener, or a sign-off such as 'Hope this helps'."
+      ]
+    }
+  ]
+}
