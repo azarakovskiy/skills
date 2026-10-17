@@ -22,6 +22,7 @@ Update installed skills later with `npx skills@latest update`.
 | Skill | Purpose |
 | --- | --- |
 | `address-review` | Work through the open review comments on your own PR — label each on its merit, decide with you what to do, then fix, defer to a follow-up ticket, or reply, with nothing reaching the PR or the tracker before you approve it. |
+| `buying-advisor` | Guide purchases with broad research and a focused conversation — discover what matters, compare personal value across flexible budgets, and ground recommendations in sources. |
 | `decompose-ticket` | Split a ticket too big for one implementation pass into a walking skeleton, one subtask per seam or entry point with frozen contracts, and an integration task — the ticket marked orchestrated, subtasks in dependency order, parallel where the owned regions are disjoint. |
 | `prompt-me` | Turn a rough request into a confirmed, high-level task prompt — clarify what only the user can decide, advise on splitting and model, then run it here or write it. |
 | `yay-nay` | Give a very concise verdict on the last reply — Yay, we're all set, or Nay, with the items that still need your attention. |

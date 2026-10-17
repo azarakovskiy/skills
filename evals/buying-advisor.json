@@ -1,0 +1,86 @@
+{
+  "skill": "buying-advisor",
+  "cases": [
+    {
+      "id": "monitor-discovery",
+      "prompt": "Help me choose one big monitor for coding, everyday use and an occasional MOBA. I am in the EU, mainly use macOS, and may add a PC later. I am undecided about curved screens. A built-in hub would be useful; speakers are optional and I mildly dislike having them. Around €1000 feels reasonable, but it is not a hard ceiling. This is our first turn: do not browse yet. Help me work out what matters before we look at models.",
+      "tests": "Turns an unsettled monitor brief into a focused next step while preserving known preferences and leaving meaningful options open.",
+      "traps": [
+        "The broad product category invites a generic shortlist or a glossary instead of useful discovery.",
+        "Curve is undecided, the PC is tentative, speakers are only mildly disliked and the budget is explicitly soft."
+      ],
+      "expectations": [
+        "Asks only a small, focused set of decision-changing questions grounded in the brief, such as usable desk/viewing space, desired working layout or the actual Mac and connection setup, rather than delivering an exhaustive questionnaire.",
+        "Makes the practical consequence of the important unknowns understandable without requiring the buyer to choose unfamiliar panel, resolution or connection specifications first.",
+        "Preserves the stated uses and preferences: does not re-ask settled facts, assume a curve preference, turn optional speakers into an exclusion, or treat the possible PC as a confirmed requirement.",
+        "Leaves cheaper and worthwhile above-€1000 options open rather than imposing a cap, an invented stretch percentage or an automatic premium target.",
+        "Keeps this first turn focused on discovery, without browsing, claiming researched offers, giving a generic model shortlist or launching a technical glossary.",
+        "Centers the response on the next consequential unknowns, with explanations that help answer the questions rather than a broad tour of screen formats, panel technology, refresh rates and hub features before those answers are known."
+      ]
+    },
+    {
+      "id": "chosen-model-offers-without-live-access",
+      "prompt": "I have already chosen the Dell UltraSharp U4025QW, exact model, for my Mac setup. I understand its resolution, scaling and Thunderbolt tradeoffs and have checked that it fits my desk. Do not reopen the monitor decision. Find the best current offers delivered to the Netherlands, comparing total price and purchase terms. There is no browsing or live seller access in this exercise, and I have not supplied any offers.",
+      "tests": "Starts at exact-model offer comparison for a knowledgeable buyer and remains useful without inventing live market evidence.",
+      "traps": [
+        "An exact model and settled technical choices remove the need for a preference interview.",
+        "The request asks for current offers, but no current seller evidence is available."
+      ],
+      "expectations": [
+        "Accepts the exact model and settled setup without a preference interview, beginner lecture or alternative-model shortlist.",
+        "Clearly states that current Netherlands prices, stock and a winning seller cannot be verified with the available access; invents no live offers, timestamps, availability or seller terms.",
+        "Offers a practical route to completing the comparison, such as evaluating supplied offer links or seller excerpts, using delivered Netherlands cost, exact variant and relevant return/warranty terms rather than merely refusing.",
+        "Keeps any follow-up narrowly tied to missing offer evidence or a purchase condition that could change the seller choice, without forcing reconfirmation of the whole brief."
+      ]
+    },
+    {
+      "id": "personal-value-and-diminishing-returns",
+      "prompt": "Choose a robot vacuum for my single-floor, hard-floor home with two shedding cats. Reliable fur pickup and avoiding hair removal from the brush matter; I dislike maintenance. No carpets, no stairs, and a basic damp wipe is enough. My reference budget is €1000, not a hard cap. Here is the complete hypothetical evidence for this exercise, not verified live prices: all four fictional models fit the furniture, satisfy navigation and fur-pickup needs, include the same auto-empty dock, have equal warranty and running costs, and have VAT/delivery included. Manufacturer manuals establish those features. The same independent hands-on test in a comparable home found: Sweep Basic, €650, needs about 40 minutes of manual brush cleaning weekly; Sweep Plus, €1000, needs the same cleaning and adds deeper carpet cleaning that I will not use; Sweep Ease, €1100, needs about 5 minutes weekly thanks to its anti-tangle system, with no pickup penalty; Sweep Luxe, €1600, performs like Ease for my use and only adds a decorative dock finish and a slightly faster mop wash. I do not care about the finish or wash speed. What is worth paying for? Use only this supplied evidence.",
+      "tests": "Compares a cheaper adequate fit, a meaningful stretch beyond a soft reference budget and an irrelevant premium by incremental personal benefit, across a non-monitor category.",
+      "traps": [
+        "The €1000 reference model adds no benefit for this buyer, while €1100 buys a relevant improvement.",
+        "The cheapest model meets core needs; the most expensive model adds no valued benefit.",
+        "All products, prices and measurements are supplied hypothetical evidence, not current market verification."
+      ],
+      "expectations": [
+        "Identifies Basic at €650 as a genuinely adequate cheaper option with the stated maintenance burden, and does not treat spending the reference budget as a goal.",
+        "Explains that Ease costs €100 above the €1000 reference but €450 above the strongest cheaper fit, buying about 35 minutes less weekly brush cleaning that matters to this buyer; supports a reasoned recommendation or a clearly bounded personal-value choice rather than a price-only ranking.",
+        "Recognizes that Plus's carpet benefit is irrelevant here and that Luxe's additional €500 over Ease has no meaningful personal return, so stops escalating the budget.",
+        "Uses the soft budget to consider the meaningful stretch without an invented price cap, automatic upsell or assumption that cheapest adequate must always win.",
+        "Gives a concise decision with the important benefits and compromises, supported by the supplied facts and their personal significance; keeps hypothetical prices and results distinct from independently verified current offers."
+      ]
+    },
+    {
+      "id": "explicit-hard-cap",
+      "prompt": "I need a coffee grinder for filter coffee. €300 delivered is an absolute maximum; I cannot spend more. My settled needs are consistent filter grinding, easy cleaning and fitting under a 40 cm shelf. No espresso. Use this complete hypothetical fixture, not live prices: independent filter tests find Grind A at €240 delivered meets my needs but takes 60 seconds per dose; Grind B at €290 delivered meets them with the same cup quality and cleaning effort in 35 seconds; Grind C at €320 delivered is quieter, faster and produces slightly better filter cups than B. All fit the shelf, include everything necessary, have equal warranty/running costs and no discounts or financing. I care enough about the faster daily workflow to pay €50 for B. Which should I buy?",
+      "tests": "Respects an explicit hard ceiling even when the better product is only slightly over it and the fixture already resolves the buyer's tradeoffs.",
+      "traps": [
+        "C offers real benefits and exceeds the ceiling by only €20.",
+        "The buyer has already established that B's €50 improvement is worthwhile; another interview is unnecessary."
+      ],
+      "expectations": [
+        "Recommends B at the supplied €290 delivered within the hard cap, relating its €50 premium over A to the buyer's stated value for a faster daily workflow.",
+        "Treats C as outside the feasible purchase set despite its advantages; does not recommend stretching, financing, assumed discounts or increasing the budget.",
+        "Proceeds from the settled needs and complete fixture without blocking the recommendation on gratuitous questions or reopening espresso requirements.",
+        "Keeps the recommendation grounded in the hypothetical supplied evidence, without claiming live prices or inventing additional costs or product performance."
+      ]
+    },
+    {
+      "id": "conflicting-evidence-and-missing-terms",
+      "prompt": "Which air purifier would you choose for my 30 m² bedroom with a 2.5 m ceiling? I want at least four air changes per hour while sleeping, and noise above 35 dBA bothers me. Use only these fictional supplied source excerpts; no browsing is available and the indicative prices are not verified current offers. Manufacturer M's brochure for Pure M says 'covers 90 m²', 'whisper quiet' and 'removes 99.99% of particles'; its manual confirms an EU 230 V model and a two-year manufacturer warranty but gives no airflow at quiet settings. Independent Lab L tested that exact EU model: CADR 250 m³/h maximum at 52 dBA, and 95 m³/h at 35 dBA. Lab L tested the exact EU Pure N with the same method: CADR 320 m³/h at 35 dBA. Both tests measure particle cleaning, not gas removal. In four owner posts about Pure N, three mention a hum and one reports quiet operation; there is no representative sample or fault-rate data. Seller S lists Pure M at an indicative €299 and Pure N at €349, but the excerpts omit delivery charges, current stock, returns and seller-specific warranty handling. No other material differences are established. Give a practical recommendation and what I should check before paying.",
+      "tests": "Weighs marketing, matched independent measurements, anecdotal complaints and incomplete seller evidence without overstating what any source establishes.",
+      "traps": [
+        "Manufacturer coverage and removal percentages do not establish the required bedroom airflow at a tolerable noise level.",
+        "Three complaints out of four supplied posts are not a population failure rate.",
+        "A manufacturer warranty is known, but seller purchase terms and current delivered prices are not."
+      ],
+      "expectations": [
+        "Relates the 75 m³ bedroom and four-air-change target to about 300 m³/h, explaining why Pure M's measured quiet-setting performance fails the stated need despite its coverage and quietness marketing.",
+        "Uses the matched independent measurements to identify Pure N as the supported performance fit at the stated noise threshold, connecting the facts to sleeping comfort rather than repeating specifications alone.",
+        "Treats Pure N's hum reports as a relevant subjective or reliability concern worth checking, not proof of a general defect, a 75% failure rate or certain quietness for this buyer.",
+        "Keeps a Pure N recommendation conditional on the meaningful remaining checks, including acceptable hum and a usable return route, without inventing a personal noise tolerance beyond the supplied threshold.",
+        "Distinguishes source roles and uncertainty: manufacturer promises are not demonstrated performance, particle tests do not prove gas removal, and indicative seller prices do not establish current delivered cost, stock, returns or seller warranty handling; identifies the missing purchase checks without fabricating terms."
+      ]
+    }
+  ]
+}
