@@ -1,6 +1,6 @@
 ---
 name: buying-advisor
-description: Buying advice: discover requirements, compare products, assess upgrade value, or find offers for a chosen product.
+description: Use when giving a buying advice. Discover requirements, compare products, assess upgrade value, or find offers for a chosen product.
 ---
 
 # Buying advisor
