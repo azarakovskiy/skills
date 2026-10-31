@@ -1,14 +1,14 @@
 ---
 name: zoom-out
-description: Explain complex or abstract subjects through their purpose, boundaries, components, and concrete examples.
+description: Explain complex or abstract subjects through purpose, boundaries, components, and concrete examples.
 ---
 
 # Zoom-out method
 
-1. **Epitome** — Summarize the whole subject in one or two sentences.
-2. **Why** — State the problem it addresses and why it matters.
-3. **Boundaries** — Identify what the explanation includes and excludes.
-4. **Map** — Name the main components and how they relate.
-5. **Zoom** — Choose one component, explain it through a concrete example, then return to the map and show where it fits.
+1. **Epitome** — Summarize the whole subject in 1–2 sentences.
+2. **Why** — State the problem addressed and why it matters.
+3. **Boundaries** — State what the explanation includes and excludes.
+4. **Map** — Name the main components and their relationships.
+5. **Zoom** — Explain one component with a concrete example, then return to the map to show where it fits.
 
-Repeat the Map–Zoom cycle only while the reader's question requires another level of detail. Stop when the question is answered without relying on undefined concepts.
+Use only concepts needed at the requested depth; define unfamiliar terms. Repeat Map–Zoom only while the question needs more detail. Stop when answered without relying on undefined concepts.

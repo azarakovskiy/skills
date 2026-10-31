@@ -19,6 +19,67 @@
       ]
     },
     {
+      "id": "first-monitor-missing-budget",
+      "prompt": "I'm buying my first external monitor for home. I code on a MacBook all day, want more space than the laptop screen, and occasionally play League of Legends. I'm in the Netherlands. What should I get?",
+      "tests": "Starts a realistic, uncued buying consultation by prioritizing missing spending comfort before product proposals.",
+      "traps": [
+        "The buyer asks what to get but supplies neither spending comfort nor the MacBook model or usable desk space.",
+        "There is no instruction to ask questions or avoid research; a generic shortlist can look helpful while skipping the buyer."
+      ],
+      "expectations": [
+        "Asks about a comfortable spending range and whether it is flexible; any additional question targets a consequential experience or setup constraint rather than re-asking known facts.",
+        "Makes the practical reason for the questions understandable without asking the first-time buyer to choose unfamiliar monitor specifications or re-asking the stated uses and country.",
+        "Keeps the reply a small, focused conversational step and waits for the buyer's answers before model proposals or a finished recommendation; does not bury the questions beneath a catalogue, broad technical tour or HTML report.",
+        "Does not silently assign a budget or treat the missing spending preference as something product research can establish."
+      ]
+    },
+    {
+      "id": "price-unfamiliar-buyer",
+      "prompt": "The cheap office chair I bought online gets uncomfortable during full working days. I'm replacing it in Germany; I've never tried a good office chair and have no idea what a sensible one costs. Where should I start?",
+      "tests": "Helps a price-unfamiliar buyer form spending comfort through useful value guidance rather than demanding an arbitrary budget.",
+      "traps": [
+        "The buyer cannot yet give an informed price ceiling.",
+        "A price ladder or expensive chair recommendation can substitute for understanding the discomfort and fit."
+      ],
+      "expectations": [
+        "Gives brief, accessible orientation to what extra spending might usefully buy for this situation, such as meaningful adjustment, durability or a safer way to try the fit, without overwhelming the buyer with chair technology.",
+        "Helps the buyer express spending comfort using that orientation rather than stalling on a bare budget demand or imposing a premium target; any additional question targets the buyer's actual discomfort or fit.",
+        "Treats any unverified price ranges as approximate orientation rather than current offers, and does not promise that a higher price or named chair will resolve the discomfort.",
+        "Keeps this an approachable next step toward narrowing the choice rather than an immediate model catalogue or finished buying report."
+      ]
+    },
+    {
+      "id": "research-returns-to-consultation",
+      "prompt": "Earlier in this conversation:\nBuyer: I code all day on an M2 MacBook Air in the Netherlands. My desk is 140 by 70 cm. My current 27-inch 4K screen has text I like, but I keep switching between my editor and browser. Around €800 is comfortable, not a hard limit. I don't game.\nAssistant: Have you used a curved ultrawide before?\nBuyer: No. I've only used the flat screen I have now.\nThe research since then is this complete hypothetical fixture, not verified live offers: manufacturer documentation confirms that both fictional monitors fit the desk and work correctly with the Mac. Flat32 is a flat 32-inch 4K screen at €650; Wide40 is a curved 40-inch 5K2K screen at €1100. A matched independent desk trial found both usable for coding: Flat32 gave the editor and browser less room side by side, while Wide40 comfortably fitted both at full working width but required more side-to-side viewing. Warranty, running costs and included connections are equal.\nBuyer: What does that mean for me?",
+      "tests": "Carries prior answers into a research-to-consultation loop when a small researched shortlist exposes an unresolved personal tradeoff.",
+      "traps": [
+        "Compatibility, desk dimensions, use, current experience and the soft budget have already been supplied.",
+        "Two plausible researched models are not a settled decision: the buyer has not valued the extra workspace against price, curve and wider viewing."
+      ],
+      "expectations": [
+        "Carries the buyer's prior answers forward without re-asking settled setup, use or spending questions, treating the flexible €800 reference as a hard ceiling, or assuming dissatisfaction with the current screen's text.",
+        "Explains the practical tradeoff between the stronger cheaper fit and Wide40's additional workspace, including the €450 premium and the new curve or wider-viewing experience, rather than ranking by size or specifications alone.",
+        "Returns the unresolved personal tradeoff to the buyer through a focused experiential question or concrete comparison they can try, with a clear invitation to answer; does not treat the two-model shortlist as permission for a finished report or an unconditional winner.",
+        "Keeps compatibility and trial findings distinct from personal comfort and willingness to pay, using the supplied hypothetical evidence without inventing live offers or claiming that research proves the wider curved screen will suit this buyer.",
+        "Surfaces the workspace, price and comfort facts needed for the buyer's next decision, rather than expanding this consultation into a full technical or purchase-terms overview."
+      ]
+    },
+    {
+      "id": "visual-request-before-discovery",
+      "prompt": "Use show-me for a visual comparison with a quick decision view and a detailed technical view. I want a big screen for coding on my MacBook at home in France, with occasional gaming.",
+      "tests": "Treats visual formatting and two detail levels as presentation preferences, not authorization to skip personal discovery.",
+      "traps": [
+        "The requested visual comparison invites an immediate artifact even though spending comfort and important setup details are missing.",
+        "The buyer has not asked to avoid questions or make a report from assumptions."
+      ],
+      "expectations": [
+        "Preserves the requested visual, quick and detailed views as presentation preferences while recognizing that the purchase brief is not yet ready for a meaningful product comparison.",
+        "Asks about spending comfort, with any additional question focused on a consequential experience or setup constraint, explaining only what is needed to answer.",
+        "Pauses for those answers rather than producing or opening a model-comparison artifact, catalogue or finished recommendation first; questions are not relegated to the end of a report.",
+        "Does not infer settled preferences, a budget or consent to assumption-led recommendations from the presentation request alone."
+      ]
+    },
+    {
       "id": "chosen-model-offers-without-live-access",
       "prompt": "I have already chosen the Dell UltraSharp U4025QW, exact model, for my Mac setup. I understand its resolution, scaling and Thunderbolt tradeoffs and have checked that it fits my desk. Do not reopen the monitor decision. Find the best current offers delivered to the Netherlands, comparing total price and purchase terms. There is no browsing or live seller access in this exercise, and I have not supplied any offers.",
       "tests": "Starts at exact-model offer comparison for a knowledgeable buyer and remains useful without inventing live market evidence.",

@@ -1,6 +1,6 @@
 ---
 name: yay-nay
-description: Answer very concisely whether the last reply needs human attention, or we're good.
+description: Say concisely whether the last reply needs human attention or we're all set.
 disable-model-invocation: true
 ---
 
@@ -15,7 +15,7 @@ Read the last reply, the work it reports, and the request it answers. Find every
 - a stated risk, assumption, or unverified claim
 - a manual step: a command, a credential, a setting, a review
 
-When unsure whether something is an item, count it.
+When unsure, count it.
 
 Answer with the verdict alone.
 
@@ -23,7 +23,7 @@ No items:
 
 > Yay, we're all set. Nothing to look at, there are no issues.
 
-One or more items, most blocking first, one short sentence each:
+Items (most blocking first, one short sentence each):
 
 > Nay, not quite done yet. These need your attention:
 >

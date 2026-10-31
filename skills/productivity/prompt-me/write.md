@@ -1,11 +1,11 @@
 # Write the execution prompt
 
-Apply [prompt-quality.md](prompt-quality.md) to turn the confirmed brief into the minimum **standalone** prompt: it makes sense without this conversation and runs AFK, so every open choice is the executor's to make. Keep the user's precise wording; leave an already adequate prompt unchanged.
+Turn the confirmed brief into the minimum **standalone** prompt under [prompt-quality.md](prompt-quality.md): understandable without this conversation, runnable AFK, every open choice the executor's. Keep the user's precise wording; leave an adequate prompt unchanged.
 
-- Write one prompt per part of a split. Name what a part needs from earlier parts and where to find it.
-- Keep the brief's model nudge out of the prompts. It tells the user which model to start the session on; the executor cannot pick its own model.
+- For splits, write one prompt per part, naming required outputs of earlier parts and where to find them.
+- Omit the brief's model nudges from prompts: they guide the user, not the executor, which cannot choose its model.
 
-Revalidate each prompt against the confirmed brief and every line of prompt-quality.md: every settled decision carried, nothing invented, no question left for a human.
+Revalidate every prompt against the confirmed brief and every line of prompt-quality.md: all settled decisions carried, nothing invented, no question left for a human.
 
 Send one labeled, copyable block per prompt:
 
